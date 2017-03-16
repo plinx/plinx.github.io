@@ -1,0 +1,16 @@
+---
+layout: default
+title: Plinx's Blog
+---
+
+<div id="home" style="cursor:url(img/mouse/normal.cur)">
+  <h1><i>Blogs</i></h1>
+  <ul class="posts" style="text-align:center">
+    {% for post in site.posts %}
+      <li>
+      	<a href="{{ post.url }}">{{ post.title }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+  <p style="margin:0px; text-align:right">Post by plinx</p>
+</div>

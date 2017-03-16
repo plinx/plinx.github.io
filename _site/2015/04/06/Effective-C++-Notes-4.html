@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta http-equiv="Cache-Control" content="no-transform">
+        <title>Effective C++ Notes - 4</title>
+        <meta name="viewport" content="width=device-width">
+
+        <!-- Latex support -->
+        <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+
+        <!-- syntax highlighting CSS -->
+        <link rel="stylesheet" href="/css/pygments.css">
+
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="/css/main.css">
+
+        <!-- Logo -->
+        <link rel="Shortcut Icon" href="/img/LP.png">
+
+    </head>
+    <body>
+      <div class="site">
+        <h1>Effective C++ Notes - 4</h1>
+<p class="meta">06 Apr 2015</p>
+
+<div class="post">
+<h2>3. Resourse Management</h2>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 13 : Use objects to manage resources.
+</code></pre></div>
+<p>C++ 允许动态管理内存，若资源分配后未进行释放，将造成内存泄露。即使在程序中使用了 delete 操作，仍可能因为程序的其他异常导致释放操作未执行。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="kt">void</span> <span class="nf">func</span><span class="p">()</span> <span class="p">{</span>
+<span class="lineno">2</span>     <span class="n">Factory</span><span class="o">*</span> <span class="n">factory</span> <span class="o">=</span> <span class="k">new</span> <span class="n">concreteFactory</span><span class="p">();</span>
+<span class="lineno">3</span>     <span class="p">...</span>    <span class="c1">// 若抛出异常，可能会造成 delete 操作未执行</span>
+<span class="lineno">4</span>     <span class="k">delete</span> <span class="n">factory</span><span class="p">;</span>
+<span class="lineno">5</span> <span class="p">}</span>
+</code></pre></div>
+
+<p>《 C++ Primer 5th 》 12.1 介绍了 shared<em>ptr 、unique</em>ptr 和 weak<em>ptr，使用 shared</em>ptr 可以对程序进行如下修改。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="kt">void</span> <span class="nf">func</span><span class="p">()</span> <span class="p">{</span>
+<span class="lineno">2</span>     <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">Factory</span><span class="o">*&gt;</span> <span class="n">factory</span><span class="p">(</span><span class="n">ConcreteFactory</span><span class="p">());</span>
+<span class="lineno">3</span>     <span class="p">...</span>
+<span class="lineno">4</span> <span class="p">}</span> <span class="c1">// 即使函数内部抛出异常，shared_ptr 的析构函数也将自动删除 factory</span>
+</code></pre></div>
+
+<p>关于 unique<em>ptr 和 weak</em>ptr　见书。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 14 : Think carefully about copying behavior in resource-managing classes.
+</code></pre></div>
+<p>对带有资源的类进行拷贝时，将会改变资源的状态。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="c1">// .h</span>
+<span class="lineno"> 2</span> <span class="kt">void</span> <span class="nf">lock</span><span class="p">(</span><span class="n">Mutex</span><span class="o">*</span> <span class="n">pm</span><span class="p">);</span>    <span class="c1">// 锁定互斥锁</span>
+<span class="lineno"> 3</span> <span class="kt">void</span> <span class="nf">unlock</span><span class="p">(</span><span class="n">Mutex</span><span class="o">*</span> <span class="n">pm</span><span class="p">);</span>  <span class="c1">// 接触互斥锁</span>
+<span class="lineno"> 4</span> <span class="k">class</span> <span class="nc">Lock</span> <span class="p">{</span>
+<span class="lineno"> 5</span> <span class="nl">public:</span>
+<span class="lineno"> 6</span>     <span class="n">explict</span> <span class="n">Lock</span><span class="p">(</span><span class="n">Mutex</span><span class="o">*</span> <span class="n">pm</span><span class="p">)</span> <span class="o">:</span> <span class="n">mutexPtr</span><span class="p">(</span><span class="n">pm</span><span class="p">)</span> <span class="p">{</span> <span class="n">lock</span><span class="p">(</span><span class="n">mutexPtr</span><span class="p">);</span> <span class="p">}</span>
+<span class="lineno"> 7</span>     <span class="o">~</span><span class="n">Lock</span><span class="p">()</span> <span class="p">{</span> <span class="n">unlock</span><span class="p">(</span><span class="n">mutexPtr</span><span class="p">);</span> <span class="p">}</span>
+<span class="lineno"> 8</span> <span class="nl">private:</span>
+<span class="lineno"> 9</span>     <span class="n">Mutex</span><span class="o">*</span> <span class="n">mutexPtr</span><span class="p">;</span>
+<span class="lineno">10</span> <span class="p">};</span>
+<span class="lineno">11</span> <span class="c1">// .cpp</span>
+<span class="lineno">12</span> <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="lineno">13</span> <span class="p">{</span>
+<span class="lineno">14</span>     <span class="p">...</span>
+<span class="lineno">15</span>     <span class="n">Lock</span> <span class="n">mlock1</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">);</span>        <span class="c1">// lock mutex</span>
+<span class="lineno">16</span>     <span class="n">Lock</span> <span class="n">mlock2</span><span class="p">(</span><span class="n">mlock1</span><span class="p">);</span>    <span class="c1">// copy mutex and don&#39;t know what would happen</span>
+<span class="lineno">17</span>     <span class="p">...</span>
+<span class="lineno">18</span> <span class="p">}</span>
+</code></pre></div>
+
+<p>控制带有资源的类的拷贝行为，有两种方法：</p>
+
+<p>（1）禁止复制（2）使用智能指针进行管理</p>
+
+<p>禁止复制可以参考条款 6，使用指针可以参考条款 13。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="c1">// prohibit copying version</span>
+<span class="lineno"> 2</span> <span class="k">class</span> <span class="nc">Uncopyable</span> <span class="p">{</span>
+<span class="lineno"> 3</span> <span class="nl">public:</span>
+<span class="lineno"> 4</span>     <span class="n">Uncopyable</span><span class="p">(</span><span class="k">const</span> <span class="n">Uncopyable</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+<span class="lineno"> 5</span>     <span class="n">Uncopyable</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">Uncopyable</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+<span class="lineno"> 6</span> <span class="p">};</span>
+<span class="lineno"> 7</span> <span class="k">class</span> <span class="nc">Lock</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Uncopyable</span> <span class="p">{</span>
+<span class="lineno"> 8</span> <span class="p">};</span>
+<span class="lineno"> 9</span> 
+<span class="lineno">10</span> <span class="c1">// smart point reference-counting version</span>
+<span class="lineno">11</span> <span class="k">class</span> <span class="nc">Lock</span> <span class="p">{</span>
+<span class="lineno">12</span> <span class="nl">public:</span>
+<span class="lineno">13</span>     <span class="n">Lock</span><span class="p">(</span><span class="n">Mutex</span><span class="o">*</span> <span class="n">pm</span><span class="p">)</span> <span class="o">:</span> <span class="n">mutexPtr</span><span class="p">(</span><span class="n">pm</span><span class="p">,</span> <span class="n">unlock</span><span class="p">)</span> <span class="p">{</span> <span class="n">lock</span><span class="p">(</span><span class="n">mutexPtr</span><span class="p">.</span><span class="n">get</span><span class="p">());</span> <span class="p">}</span>
+<span class="lineno">14</span> <span class="nl">private:</span>
+<span class="lineno">15</span>     <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">Mutex</span><span class="o">*&gt;</span> <span class="n">mutexPtr</span><span class="p">;</span>
+<span class="lineno">16</span> <span class="p">}</span>
+</code></pre></div>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 15 : Provide access to raw resources in resource-managing classes.
+</code></pre></div>
+<p>使用智能指针时，若函数 API 需要调用原始资源（raw resources），可以使用两种方法：</p>
+
+<p>（1）显示转换（2）隐式转换</p>
+
+<p>shared_ptr 和 auto_ptr 都提供了 get 成员函数，显示地返回指针对象。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">Factory</span><span class="o">*&gt;</span> <span class="n">factory</span><span class="p">(</span><span class="n">ConcreteFactory</span><span class="p">());</span>
+<span class="lineno">2</span> <span class="c1">// int getProductId(const Factory* f);</span>
+<span class="lineno">3</span> <span class="kt">int</span> <span class="n">ProductId</span> <span class="o">=</span> <span class="n">getProductId</span><span class="p">(</span><span class="n">factory</span><span class="p">.</span><span class="n">get</span><span class="p">());</span> 
+</code></pre></div>
+
+<p>若使用自定义的类进行资源调用时，可以通过实现 get 进行显示转换，实现 operator() 进行隐式转换。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">Font</span> <span class="p">{</span>
+<span class="lineno"> 2</span> <span class="nl">public:</span>
+<span class="lineno"> 3</span>     <span class="n">explict</span> <span class="n">Font</span><span class="p">(</span><span class="n">FontHandle</span> <span class="n">f</span><span class="p">)</span> <span class="o">:</span> <span class="n">fh</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="p">{}</span>
+<span class="lineno"> 4</span>     <span class="o">~</span><span class="n">Font</span><span class="p">()</span> <span class="p">{</span> <span class="n">releaseFont</span><span class="p">(</span><span class="n">f</span><span class="p">);</span> <span class="p">}</span>
+<span class="lineno"> 5</span>     
+<span class="lineno"> 6</span>     <span class="n">FontHandle</span> <span class="n">get</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">f</span><span class="p">;</span> <span class="p">}</span>      <span class="c1">// better idea</span>
+<span class="lineno"> 7</span>     <span class="k">operator</span> <span class="n">FontHandle</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">f</span><span class="p">;</span> <span class="p">}</span> <span class="c1">// not a good idea</span>
+<span class="lineno"> 8</span> <span class="nl">private:</span>
+<span class="lineno"> 9</span>     <span class="n">FontHandle</span> <span class="n">fh</span><span class="p">;</span>
+<span class="lineno">10</span> <span class="p">}</span>
+</code></pre></div>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 16 : Use the asme form in corresponding uses of new and delete.
+</code></pre></div>
+<p>在 new 表达式中使用了 []，在 delete 中也应该对应使用 []，反之亦然。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">*</span> <span class="n">strPtr1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">;</span>
+<span class="lineno">2</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">*</span> <span class="n">strPtr2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
+<span class="lineno">3</span> 
+<span class="lineno">4</span> <span class="k">delete</span> <span class="n">strPtr1</span><span class="p">;</span>
+<span class="lineno">5</span> <span class="k">delete</span> <span class="p">[]</span> <span class="n">strPtr2</span><span class="p">;</span>
+</code></pre></div>
+
+<p>更详细的细节可参考 《 C++ Primer 5th 》 12.2。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Store newed objects in smart pointers in standalone statements.
+</code></pre></div>
+<p>若给一个函数传入即时动态申请的智能指针，可能将造成资源泄漏。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="c1">// .h</span>
+<span class="lineno"> 2</span> <span class="kt">int</span> <span class="nf">priority</span><span class="p">();</span>
+<span class="lineno"> 3</span> <span class="kt">void</span> <span class="nf">processWidget</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">Widget</span><span class="o">&gt;</span> <span class="n">pw</span><span class="p">,</span> <span class="kt">int</span> <span class="n">priority</span><span class="p">);</span>
+<span class="lineno"> 4</span> 
+<span class="lineno"> 5</span> <span class="c1">// .cpp</span>
+<span class="lineno"> 6</span> <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="lineno"> 7</span> <span class="p">{</span>
+<span class="lineno"> 8</span>     <span class="c1">// compile error.</span>
+<span class="lineno"> 9</span>     <span class="n">processWidget</span><span class="p">(</span><span class="k">new</span> <span class="n">Widget</span><span class="p">,</span> <span class="n">priority</span><span class="p">());</span>
+<span class="lineno">10</span>     <span class="c1">// compile success but not safe</span>
+<span class="lineno">11</span>     <span class="n">processWidget</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">Widget</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">Widget</span><span class="p">),</span> <span class="n">priority</span><span class="p">());</span>
+<span class="lineno">12</span>     <span class="c1">// better choice</span>
+<span class="lineno">13</span>     <span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">Widget</span><span class="o">&gt;</span> <span class="n">pw</span><span class="p">(</span><span class="k">new</span> <span class="n">Widget</span><span class="p">);</span>
+<span class="lineno">14</span>     <span class="n">processWidget</span><span class="p">(</span><span class="n">pw</span><span class="p">,</span> <span class="n">priority</span><span class="p">());</span>
+<span class="lineno">15</span> <span class="p">}</span>
+</code></pre></div>
+
+<p>&copy; 2015 plinx</p>
+
+</div>
+
+      </div>
+    </body>
+</html>

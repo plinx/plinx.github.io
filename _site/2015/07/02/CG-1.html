@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta http-equiv="Cache-Control" content="no-transform">
+        <title>CG1 - 基本绘图单元</title>
+        <meta name="viewport" content="width=device-width">
+
+        <!-- Latex support -->
+        <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+
+        <!-- syntax highlighting CSS -->
+        <link rel="stylesheet" href="/css/pygments.css">
+
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="/css/main.css">
+
+        <!-- Logo -->
+        <link rel="Shortcut Icon" href="/img/LP.png">
+
+    </head>
+    <body>
+      <div class="site">
+        <h1>CG1 - 基本绘图单元</h1>
+<p class="meta">02 Jul 2015</p>
+
+<div class="post">
+<h2>0、概述</h2>
+
+<p>软件渲染器制作过程有三个阶段：</p>
+
+<ul>
+<li>基本的绘图库支持</li>
+<li>3D 数据结构与数学库支持</li>
+<li>3D 效果支持与优化</li>
+</ul>
+
+<p>市面上人们常用的 3D 图形引擎效果不一，但都支持这些基本的功能和过程。3D 引擎的主要目标是封装实现细节，抽象出逻辑接口，让引擎用户加快开发速度，减少 idea 到产品化的时间。</p>
+
+<p>学习和使用一套成熟的引擎制作东西是正确的，但对于程序员，仿制一个轮子也很有意义。打个比方，一个不了解轮胎性能的赛车手，是很难在不同的场地保持优势的，甚至有可能是极其危险的。</p>
+
+<p>学习并制作一个软件渲染器，当驾车上路时，也就会明白“<em>when and where to speed up</em>”。</p>
+
+<h2>1、Windows GDI(Graphics Device Interface)</h2>
+
+<p>Windows 提供了 Direct2D/3D、GDI/GDI+ 等多种图形 API。</p>
+
+<p>Direct2D/3D 是微软为 2D/3D 游戏专门优化的 API，其本身就是完整的图形引擎。</p>
+
+<p>GDI/GDI+ 是 Windows 系统最基本的图形设备接口。</p>
+
+<p>为了把图像在 windows 中显示出来，必须调用图形 API。在第一版的程序中，我选择 GDI 作为基本的绘图接口主要出于以下考虑：1）GDI 本身不存在性能瓶颈，也可以支持像素级的访问；2）Direct2D/3D 就是图形引擎，从图形引擎中取出一个绘图单元去构建一个图形引擎，总感觉有些别捏；3）使用 GDI 制作出的图形引擎，到后期可以与 Direct3D 进行比较，效果拔城。</p>
+
+<h2>2、寻找 pixel</h2>
+
+<p>再次翻出图形学的“渲染说”：</p>
+
+<p><em>给我一段显存，我可以绘出整个世界。</em></p>
+
+<p>基于 GDI，有多种操作像素的方式，常用的有 GetPixel()/SetPixel() 和 DIB/DDB。在《Windows 图形编程》7-4节结尾，描述了这几种方式的操作像素性能区别：</p>
+
+<ul>
+<li>GetPixel()    30251 p/s(pixel/second)</li>
+<li>SetPixel()    152881 p/s</li>
+<li>DIB()         n*10^6 p/s</li>
+</ul>
+
+<p>考虑到图形引擎需要实时变化，其间每一帧都有大量的像素被重绘，当然是越快越好了。</p>
+
+<p>DIBSection 的创建与像素操作很简单，在我的 Github 中有一份使用 DIBSection 像素操作实现的<a href="https://github.com/plinx/CodePractices/blob/master/Programming-Windows/GDI/DibSection/DibSection/Source.cpp#L89">颜色渐变程序</a>。</p>
+
+<p><img src="/img/cg/range.jpg" alt="range"></p>
+
+<p>在这份代码中，除去 Windows 程序的框架部分，从 89 行开始，逐个像素进行渲染。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="n">hbitmap</span> <span class="o">=</span> <span class="n">CreateDIBSection</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">Info</span><span class="p">,</span> <span class="n">DIB_RGB_COLORS</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span><span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">pRgb</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="lineno"> 2</span> <span class="c1">//从 Info 的信息创建一个 hbitmap 的区块，将 pRgb 指向区块的首地址。</span>
+<span class="lineno"> 3</span> 
+<span class="lineno"> 4</span> <span class="n">BytesPerLine</span> <span class="o">=</span> <span class="n">cxClient</span> <span class="o">*</span> <span class="mi">3</span><span class="p">;</span>
+<span class="lineno"> 5</span> <span class="k">if</span> <span class="p">(</span><span class="n">BytesPerLine</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+<span class="lineno"> 6</span>  <span class="n">BytesPerLine</span> <span class="o">+=</span> <span class="mi">4</span> <span class="o">-</span> <span class="n">BytesPerLine</span> <span class="o">%</span> <span class="mi">4</span><span class="p">;</span>
+<span class="lineno"> 7</span> <span class="c1">//获取区块显示区域的行宽并对齐</span>
+<span class="lineno"> 8</span> 
+<span class="lineno"> 9</span> <span class="k">for</span> <span class="p">(</span><span class="kt">float</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="n">cyClient</span><span class="p">;</span> <span class="n">y</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno">10</span>  <span class="n">point</span> <span class="o">=</span> <span class="n">pRgb</span><span class="p">;</span>
+<span class="lineno">11</span>  <span class="k">for</span> <span class="p">(</span><span class="kt">float</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">cxClient</span><span class="p">;</span> <span class="n">x</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno">12</span>      <span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno">13</span>      <span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span> <span class="o">/</span> <span class="n">cyClient</span> <span class="o">*</span> <span class="mi">255</span><span class="p">;</span>
+<span class="lineno">14</span>      <span class="n">point</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">cxClient</span> <span class="o">*</span> <span class="mi">255</span><span class="p">;</span>
+<span class="lineno">15</span>      <span class="n">point</span> <span class="o">+=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="lineno">16</span>  <span class="p">}</span>
+<span class="lineno">17</span>  <span class="n">pRgb</span> <span class="o">+=</span> <span class="n">BytesPerLine</span><span class="p">;</span>
+<span class="lineno">18</span> <span class="p">}</span>
+<span class="lineno">19</span> <span class="c1">//point[0..2] 依次对应了 Blue, Green, Red，共同构成了 24 位色的一个 pixel</span>
+<span class="lineno">20</span> 
+<span class="lineno">21</span> <span class="n">hdcmem</span> <span class="o">=</span> <span class="n">CreateCompatibleDC</span><span class="p">(</span><span class="n">hdc</span><span class="p">);</span>
+<span class="lineno">22</span> <span class="n">SelectObject</span><span class="p">(</span><span class="n">hdcmem</span><span class="p">,</span> <span class="n">hbitmap</span><span class="p">);</span>
+<span class="lineno">23</span> <span class="n">BitBlt</span><span class="p">(</span><span class="n">ps</span><span class="p">.</span><span class="n">hdc</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cxClient</span><span class="p">,</span> <span class="n">cyClient</span><span class="p">,</span> <span class="n">hdcmem</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SRCCOPY</span><span class="p">);</span>
+<span class="lineno">24</span> <span class="c1">//根据当前窗口区域创建一个设备兼容的上下文，并关联到我们创建的 hbitmap 区块</span>
+<span class="lineno">25</span> <span class="c1">//执行 BitBlt 时，在临时创建的设备上下文中的信息，即刻复制到了当前显示窗口中</span>
+</code></pre></div>
+
+<p>DIBSection 的操作过程可以理解为“创建 -&gt; 修改 -&gt; 显示（映射）”。如果给上述代码中的  hdcmem 的名字换成“帧”，或许更好理解，操作过程变为“创建帧 -&gt; 修改帧 -&gt; 显示下一帧”。</p>
+
+<h2>3、封装像素操作</h2>
+
+<p>既然已经了解 DIBSection 的创建与操作，那么将操作封装起来，也就有了我们自己的 SetPixel()。</p>
+
+<p>我 Github 中的渲染引擎文件在 <a href="https://github.com/plinx/CG">https://github.com/plinx/CG</a> 目录下。</p>
+
+<p>在这个目录下有 4 个文件夹：</p>
+
+<ul>
+<li>Rasterization     : 这几篇文章描述的软件渲染器目录<br></li>
+<li>SoftRender        : 光线追踪渲染器，WebGL 的 C++ 复刻版</li>
+<li>WebGL             : Milo Yip 的 js 光线追踪渲染器</li>
+<li>Windows Graphics  : Windows 图形编程练习</li>
+</ul>
+
+<p>这几篇文章主要讲软件渲染器的内容，但这里安利一下 Milo Yip 的博文《<a href="http://www.cnblogs.com/miloyip/archive/2010/03/29/1698953.html">用JavaScript玩转计算机图形学(一)光线追踪入门</a>》、《<a href="http://www.cnblogs.com/miloyip/archive/2010/04/02/1702768.html">用JavaScript玩转计算机图形学(二)基本光源</a>》。</p>
+
+<p>在无任何基础的情况下，阅读 Milo Yip 的在知乎上《<a href="http://www.zhihu.com/question/20187195/answer/34873279">如何用 C 语言画一个“心形”</a>》的回答和这两篇文章极大地触动了我：原来编程的表达可以这么“精致”。</p>
+
+<p>所以我也满怀敬意地写了人生第一张<a href="http://www.cplinx.com/2014/12/26/Heart.html">渲染图</a>和 SoftRender。</p>
+
+<p>以下回归主题。</p>
+
+<p>封装像素操作时，我做了两个工作，抽离 Windows 框架的代码和封装像素操作。</p>
+
+<p>此时软件渲染器中包含了 5 个文件：</p>
+
+<ul>
+<li>main.cpp  : 主程序</li>
+<li>LWin.h    : Windows 框架类 </li>
+<li>LWin.cpp  : ...</li>
+<li>Painter.h : Pixel 操作</li>
+<li>Color.h   : Color 结构</li>
+</ul>
+
+<p>如果你已经熟悉了 Windows 编程，可以略过大部分 LWin.h/LWin.cpp 的函数，所有的渲染草走都放在 <code>LWindow::Render</code> 中，而渲染实现则放在 inc 目录下的其他头文件中。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="n">Painter</span><span class="o">::</span><span class="n">_setColor</span><span class="p">(</span><span class="n">PBYTE</span><span class="o">&amp;</span> <span class="n">pixel</span><span class="p">,</span> <span class="n">Color</span><span class="o">&amp;</span> <span class="n">color</span><span class="p">)</span>
+<span class="lineno"> 2</span> <span class="p">{</span>
+<span class="lineno"> 3</span>  <span class="n">pixel</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">color</span><span class="p">.</span><span class="n">B</span><span class="p">;</span>
+<span class="lineno"> 4</span>  <span class="n">pixel</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">color</span><span class="p">.</span><span class="n">G</span><span class="p">;</span>
+<span class="lineno"> 5</span>  <span class="n">pixel</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">color</span><span class="p">.</span><span class="n">R</span><span class="p">;</span>
+<span class="lineno"> 6</span> <span class="p">}</span>
+<span class="lineno"> 7</span> 
+<span class="lineno"> 8</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="n">Painter</span><span class="o">::</span><span class="n">drawPixel</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">,</span> <span class="n">Color</span><span class="o">&amp;</span> <span class="n">color</span><span class="p">)</span>
+<span class="lineno"> 9</span> <span class="p">{</span>
+<span class="lineno">10</span>  <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">_height</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+<span class="lineno">11</span>  <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">_width</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+<span class="lineno">12</span>  <span class="n">_pixel</span> <span class="o">=</span> <span class="n">_scanLine</span> <span class="o">+</span> <span class="n">_bytesPerLine</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="p">);</span>
+<span class="lineno">13</span>  <span class="n">_pixel</span> <span class="o">+=</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">3</span><span class="p">;</span>
+<span class="lineno">14</span>  <span class="n">_setColor</span><span class="p">(</span><span class="n">_pixel</span><span class="p">,</span> <span class="n">color</span><span class="p">);</span>
+<span class="lineno">15</span> <span class="p">}</span>
+</code></pre></div>
+
+<p>借助这个 drawPixel 就可以进行简单的绘图了。以下显示了一个画线的 demo，在这个 demo 中，从坐标 P1(100, 100) 到 P2(400, 400) 绘制了一条白色直线。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="kt">void</span> <span class="n">LWindow</span><span class="o">::</span><span class="n">LineDemo</span><span class="p">()</span>
+<span class="lineno">2</span> <span class="p">{</span>
+<span class="lineno">3</span>   <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">400</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">,</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="lineno">4</span>       <span class="n">painter</span><span class="p">.</span><span class="n">drawPixel</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">Color</span><span class="p">(</span><span class="n">ColorStyle</span><span class="o">::</span><span class="n">White</span><span class="p">));</span>
+<span class="lineno">5</span> 
+<span class="lineno">6</span>   <span class="n">BitBlt</span><span class="p">(</span><span class="n">_hdc</span><span class="p">,</span>
+<span class="lineno">7</span>       <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">_width</span><span class="p">,</span> <span class="n">_height</span><span class="p">,</span>
+<span class="lineno">8</span>       <span class="n">_hdcMem</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SRCCOPY</span><span class="p">);</span>
+<span class="lineno">9</span> <span class="p">}</span>
+</code></pre></div>
+
+<p><img src="/img/cg/pixeldemo.jpg" alt="pixeldemo"></p>
+
+<p>基于点，我们就有了创造万物的力量，由点及线，由线及面，就可以创建出 2D 空间的图形了。这里我暂时略去了边界检测部分的内容，等到 3D 裁剪的章节再进行详解。如果你初学至此，可以思考/测试一下，当 drawPixel 超出屏幕边界时会发生什么情况，如何去避免这种情况发生。</p>
+
+<hr>
+
+<p>如果你发现我文章中的问题或希望与我交流，可以给我发邮件：<a href="mailto:plinux@qq.com">plinux@qq.com</a>。</p>
+
+<p>如果你读后有些许收获，也可以到我的 Github <a href="https://github.com/plinx">点赞支持</a>。</p>
+
+<p>&copy; 2015 plinx</p>
+
+</div>
+
+      </div>
+    </body>
+</html>

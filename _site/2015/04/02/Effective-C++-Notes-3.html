@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta http-equiv="Cache-Control" content="no-transform">
+        <title>Effective C++ Notes - 3</title>
+        <meta name="viewport" content="width=device-width">
+
+        <!-- Latex support -->
+        <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+
+        <!-- syntax highlighting CSS -->
+        <link rel="stylesheet" href="/css/pygments.css">
+
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="/css/main.css">
+
+        <!-- Logo -->
+        <link rel="Shortcut Icon" href="/img/LP.png">
+
+    </head>
+    <body>
+      <div class="site">
+        <h1>Effective C++ Notes - 3</h1>
+<p class="meta">02 Apr 2015</p>
+
+<div class="post">
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 07 : Declare destructors virtual in polymorphic base classes.
+</code></pre></div>
+<p>（1）在多态（polymorphic）的基类中，只有将析构函数声明为虚析构函数才能正确地绑定到每一个派生类中。</p>
+
+<p>（2）基类有非虚构（non-virtual）析构函数时，delete 指向派生类的基类指针是未定义的。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="c1">// .h</span>
+<span class="lineno"> 2</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="lineno"> 3</span> <span class="nl">public:</span> 
+<span class="lineno"> 4</span>     <span class="n">A</span><span class="p">();</span>
+<span class="lineno"> 5</span>     <span class="o">~</span><span class="n">A</span><span class="p">();</span>
+<span class="lineno"> 6</span> <span class="p">}</span>
+<span class="lineno"> 7</span> <span class="k">class</span> <span class="nc">B</span> <span class="o">:</span> <span class="k">public</span> <span class="n">A</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+<span class="lineno"> 8</span> <span class="c1">// .cpp</span>
+<span class="lineno"> 9</span> <span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+<span class="lineno">10</span> <span class="p">{</span>
+<span class="lineno">11</span>     <span class="n">A</span><span class="o">*</span> <span class="n">pb</span> <span class="o">=</span> <span class="k">new</span> <span class="n">B</span><span class="p">();</span>
+<span class="lineno">12</span>     <span class="k">delete</span> <span class="n">pb</span><span class="p">;</span>  <span class="c1">// undefined behevior</span>
+<span class="lineno">13</span> <span class="p">}</span>
+</code></pre></div>
+
+<p>（3）C++11 中新增了 final 和 override 关键字，final 可以禁止派生类覆盖函数，override 可以检查基类是否存在同名虚函数，更详细的细节可参考《 C++ Primer 5th 》 15.3。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="lineno"> 2</span> <span class="nl">public:</span>
+<span class="lineno"> 3</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">f1</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+<span class="lineno"> 4</span>     <span class="kt">void</span> <span class="nf">f2</span><span class="p">();</span>
+<span class="lineno"> 5</span>     <span class="kt">void</span> <span class="nf">f3</span><span class="p">();</span>
+<span class="lineno"> 6</span>     <span class="kt">void</span> <span class="n">f4</span><span class="p">()</span> <span class="n">final</span><span class="p">;</span>
+<span class="lineno"> 7</span> <span class="p">}</span>
+<span class="lineno"> 8</span> <span class="k">class</span> <span class="nc">B</span> <span class="o">:</span> <span class="k">public</span> <span class="n">A</span> <span class="p">{</span>
+<span class="lineno"> 9</span> <span class="nl">public:</span>
+<span class="lineno">10</span>     <span class="kt">void</span> <span class="n">f1</span><span class="p">()</span> <span class="k">const</span> <span class="n">override</span><span class="p">;</span> <span class="c1">// Pass</span>
+<span class="lineno">11</span>     <span class="kt">void</span> <span class="n">f2</span><span class="p">()</span> <span class="n">override</span><span class="p">;</span>       <span class="c1">// Error : no virtual match</span>
+<span class="lineno">12</span>     <span class="kt">void</span> <span class="nf">f3</span><span class="p">();</span>                <span class="c1">// Pass</span>
+<span class="lineno">13</span>     <span class="kt">void</span> <span class="nf">f4</span><span class="p">();</span>                <span class="c1">// Error : final matched</span>
+<span class="lineno">14</span> <span class="p">}</span>
+</code></pre></div>
+
+<p>（4）含有纯虚函数的抽象基类，不能直接创建对象。为抽象基类添加纯虚析构函数，可以一箭双雕，让编译器自动为派生类生成虚构函数。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="lineno">2</span> <span class="nl">public:</span>
+<span class="lineno">3</span>     <span class="k">virtual</span> <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>   <span class="c1">// function with &quot;= 0&quot; is a pure virtual function</span>
+<span class="lineno">4</span> <span class="p">}</span>
+<span class="lineno">5</span> <span class="n">A</span><span class="o">::~</span><span class="n">A</span><span class="p">()</span> <span class="p">{}</span>    <span class="c1">// important !!!</span>
+</code></pre></div>
+
+<p><strong>注意：纯虚析构函数必须要在类外部为其提供一份定义，否则连接器会报错</strong></p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 08 : Prevent exceptions from leaving destructors.
+</code></pre></div>
+<p>（1）析构函数中若要调用释放资源的操作，必须为其处理异常，否则可能会影响剩下的析构处理。</p>
+
+<p>（2）释放资源比较好的处理机制：提供给客户使用释放资源操作的接口，但同时记录其标志位，若客户未调用，则有析构函数自行处理。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="lineno"> 2</span> <span class="nl">public:</span>
+<span class="lineno"> 3</span>     <span class="kt">void</span> <span class="n">close</span><span class="p">()</span> <span class="p">{</span>
+<span class="lineno"> 4</span>         <span class="c1">// free resourse</span>
+<span class="lineno"> 5</span>         <span class="n">closed</span> <span class="o">=</span> <span class="n">ture</span><span class="p">;</span>
+<span class="lineno"> 6</span>     <span class="p">}</span>
+<span class="lineno"> 7</span>     <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="p">{</span>
+<span class="lineno"> 8</span>         <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">closed</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno"> 9</span>             <span class="c1">// free resourse</span>
+<span class="lineno">10</span>         <span class="p">}</span> <span class="k">catch</span> <span class="p">(..)</span> <span class="p">{</span>
+<span class="lineno">11</span>         <span class="p">}</span>
+<span class="lineno">12</span>     <span class="p">}</span>
+<span class="lineno">13</span> <span class="nl">private:</span>
+<span class="lineno">14</span>     <span class="kt">bool</span> <span class="n">closed</span><span class="p">;</span>
+<span class="lineno">15</span> <span class="p">};</span>
+</code></pre></div>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 09 : Never call virtaul functions during construction or destruction.
+</code></pre></div>
+<p>构造函数与析构函数都处于函数的构造期，在这个时期，virtual 处于未绑定状态，若在构造函数与析构函数中直接调用虚函数，编译器将报错；若声明了纯虚函数并间接调用，会导致派生类无法绑定对应的纯虚函数。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="lineno">2</span> <span class="nl">public:</span>
+<span class="lineno">3</span>     <span class="n">A</span><span class="p">()</span> <span class="p">{</span> <span class="n">init</span><span class="p">();</span> <span class="p">}</span>
+<span class="lineno">4</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">vfunc</span><span class="p">()</span> <span class="k">const</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno">5</span> <span class="nl">private:</span>
+<span class="lineno">6</span>     <span class="kt">void</span> <span class="nf">init</span><span class="p">()</span> <span class="p">{</span>
+<span class="lineno">7</span>         <span class="n">vfunc</span><span class="p">();</span>
+<span class="lineno">8</span>     <span class="p">}</span>
+<span class="lineno">9</span> <span class="p">};</span>
+</code></pre></div>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 10 : Have assignment operators return a reference to *this.
+</code></pre></div>
+<p>operator= 返回引用可以实现连锁解析。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="c1">// .h</span>
+<span class="lineno">2</span> <span class="n">A</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno">3</span>     <span class="p">...</span>
+<span class="lineno">4</span>     <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+<span class="lineno">5</span> <span class="p">}</span>
+<span class="lineno">6</span> <span class="c1">// .cpp</span>
+<span class="lineno">7</span> <span class="c1">// A a1, a2, a3;</span>
+<span class="lineno">8</span> <span class="n">a1</span> <span class="o">=</span> <span class="n">a2</span> <span class="o">=</span> <span class="n">a3</span><span class="p">;</span>   <span class="c1">// a1 = (a2 = a3);</span>
+</code></pre></div>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 11 : Handle assignment to self in operator=.
+</code></pre></div>
+<p>operator= 中的相等校验，可以防止赋值前的删除操作导致的指针失效，检查方法主要有三种：判断来源和目标地址、设计实现顺序以及拷贝交换（copy-and-swap）。其中前两者速度较慢，因为在每次相同校验中都产生了不同数量的内存操作指令，拷贝交换将操作放在类的构造函数中，能让编译器产生更高效的代码。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="lineno"> 2</span>     <span class="n">B</span><span class="o">*</span> <span class="n">pb</span><span class="p">;</span>
+<span class="lineno"> 3</span> <span class="p">};</span>
+<span class="lineno"> 4</span> <span class="c1">// version 1 : identity test</span>
+<span class="lineno"> 5</span> <span class="n">A</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno"> 6</span>     <span class="k">if</span> <span class="p">(</span><span class="k">this</span> <span class="o">==</span> <span class="o">&amp;</span><span class="n">rhs</span><span class="p">)</span> <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+<span class="lineno"> 7</span>     
+<span class="lineno"> 8</span>     <span class="k">delete</span> <span class="n">pb</span><span class="p">;</span>
+<span class="lineno"> 9</span>     <span class="n">pb</span> <span class="o">=</span> <span class="k">new</span> <span class="n">B</span><span class="p">(</span><span class="o">*</span><span class="n">rhs</span><span class="p">.</span><span class="n">pb</span><span class="p">);</span>
+<span class="lineno">10</span>     <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span> 
+<span class="lineno">11</span> <span class="p">}</span>
+<span class="lineno">12</span> <span class="c1">// version 2 : exception safety</span>
+<span class="lineno">13</span> <span class="n">A</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno">14</span>     <span class="n">A</span><span class="o">*</span> <span class="n">pold</span> <span class="o">=</span> <span class="n">pb</span><span class="p">;</span>
+<span class="lineno">15</span>     <span class="n">pb</span> <span class="o">=</span> <span class="k">new</span> <span class="n">B</span><span class="p">(</span><span class="o">*</span><span class="n">rhs</span><span class="p">.</span><span class="n">pb</span><span class="p">);</span>
+<span class="lineno">16</span>     <span class="k">delete</span> <span class="n">pold</span><span class="p">;</span>
+<span class="lineno">17</span>     <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>  
+<span class="lineno">18</span> <span class="p">}</span>
+<span class="lineno">19</span> <span class="c1">// version 3 : copy-and-swap</span>
+<span class="lineno">20</span> <span class="n">A</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// call operator=(A rhs) inside</span>
+<span class="lineno">21</span>     <span class="n">A</span> <span class="n">tmp</span><span class="p">(</span><span class="n">rhs</span><span class="p">);</span>
+<span class="lineno">22</span>     <span class="n">swap</span><span class="p">(</span><span class="n">tmp</span><span class="p">);</span>
+<span class="lineno">23</span>     <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+<span class="lineno">24</span> <span class="p">}</span>
+<span class="lineno">25</span> <span class="cm">/*</span>
+<span class="lineno">26</span> <span class="cm">A&amp; operator=(A rhs) {</span>
+<span class="lineno">27</span> <span class="cm">    swap(rhs);</span>
+<span class="lineno">28</span> <span class="cm">    return *this;</span>
+<span class="lineno">29</span> <span class="cm">}</span>
+<span class="lineno">30</span> <span class="cm">*/</span>
+</code></pre></div>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 12 : Copy all parts of an object.
+</code></pre></div>
+<p>拷贝构造函数和拷贝赋值构造函数不会提示元素未被复制，当调用是应仔细确认每一个元素都被成功复制了，尤其是在<strong>派生类</strong>中。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="lineno"> 2</span> <span class="nl">public:</span>
+<span class="lineno"> 3</span>     <span class="n">A</span><span class="p">(</span><span class="kt">int</span> <span class="n">d</span><span class="p">)</span> <span class="o">:</span> <span class="n">data</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="p">{}</span>
+<span class="lineno"> 4</span>     <span class="n">A</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">:</span> <span class="n">data</span><span class="p">(</span><span class="n">rhs</span><span class="p">.</span><span class="n">data</span><span class="p">)</span> <span class="p">{}</span>
+<span class="lineno"> 5</span>     <span class="n">A</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno"> 6</span>         <span class="n">A</span> <span class="n">tmp</span><span class="p">(</span><span class="n">rhs</span><span class="p">);</span>
+<span class="lineno"> 7</span>         <span class="n">std</span><span class="o">::</span><span class="n">swap</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">tmp</span><span class="p">.</span><span class="n">data</span><span class="p">);</span> <span class="c1">// impliement of swap(rhs)</span>
+<span class="lineno"> 8</span>         <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+<span class="lineno"> 9</span>     <span class="p">}</span>
+<span class="lineno">10</span> 
+<span class="lineno">11</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">print</span><span class="p">()</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">data</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
+<span class="lineno">12</span> <span class="nl">protected:</span>
+<span class="lineno">13</span>     <span class="kt">int</span> <span class="n">data</span><span class="p">;</span>
+<span class="lineno">14</span> <span class="p">};</span>
+<span class="lineno">15</span> 
+<span class="lineno">16</span> <span class="k">class</span> <span class="nc">B</span> <span class="o">:</span> <span class="k">public</span> <span class="n">A</span> <span class="p">{</span>
+<span class="lineno">17</span> <span class="nl">public:</span>
+<span class="lineno">18</span>     <span class="n">B</span><span class="p">(</span><span class="kt">int</span> <span class="n">d</span><span class="p">,</span> <span class="kt">int</span> <span class="n">e</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">(</span><span class="n">d</span><span class="p">),</span> <span class="n">element</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>  <span class="p">{}</span>
+<span class="lineno">19</span>     <span class="n">B</span><span class="p">(</span><span class="k">const</span> <span class="n">B</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">:</span> <span class="n">A</span><span class="p">(</span><span class="n">rhs</span><span class="p">),</span> <span class="n">element</span><span class="p">(</span><span class="n">rhs</span><span class="p">.</span><span class="n">element</span><span class="p">)</span> <span class="p">{}</span>
+<span class="lineno">20</span>     <span class="n">B</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">B</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno">21</span>         <span class="n">B</span> <span class="n">tmp</span><span class="p">(</span><span class="n">rhs</span><span class="p">);</span>                       <span class="c1">// call A(const A&amp; rhs) here </span>
+<span class="lineno">22</span>         <span class="n">std</span><span class="o">::</span><span class="n">swap</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">tmp</span><span class="p">.</span><span class="n">element</span><span class="p">);</span>  <span class="c1">// implement of swap rhs</span>
+<span class="lineno">23</span>         <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+<span class="lineno">24</span>     <span class="p">}</span>
+<span class="lineno">25</span> 
+<span class="lineno">26</span>     <span class="kt">void</span> <span class="n">print</span><span class="p">()</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">data</span> <span class="o">&lt;&lt;</span> <span class="s">&quot; &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">element</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
+<span class="lineno">27</span> <span class="nl">private:</span>
+<span class="lineno">28</span>     <span class="kt">int</span> <span class="n">element</span><span class="p">;</span>
+<span class="lineno">29</span> <span class="p">};</span>
+</code></pre></div>
+
+<p>&copy; 2015 plinx</p>
+
+</div>
+
+      </div>
+    </body>
+</html>

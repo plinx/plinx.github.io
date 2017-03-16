@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta http-equiv="Cache-Control" content="no-transform">
+        <title>CG5 - 相机成像</title>
+        <meta name="viewport" content="width=device-width">
+
+        <!-- Latex support -->
+        <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+
+        <!-- syntax highlighting CSS -->
+        <link rel="stylesheet" href="/css/pygments.css">
+
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="/css/main.css">
+
+        <!-- Logo -->
+        <link rel="Shortcut Icon" href="/img/LP.png">
+
+    </head>
+    <body>
+      <div class="site">
+        <h1>CG5 - 相机成像</h1>
+<p class="meta">07 Jul 2015</p>
+
+<div class="post">
+<h2>0、概述</h2>
+
+<p>经过前面诸多的准备工作，构建了物体，变换了坐标，最后还需要在渲染器中放入一个相机才能将物体显示出来。</p>
+
+<p>相机的实现存放在 <a href="https://github.com/plinx/CG/blob/master/Raterization/Raterization/inc/Camera.h">Camera.h</a> 中，虽然只有一个文件，但是相机负责的工作却相当多。</p>
+
+<p>首先回顾一下上一节最后流水线的结构：</p>
+
+<p><img src="/img/cg/pipeline2.jpg" alt="pipeline2"></p>
+
+<p>在我们用眼睛观察周围时，有许多因素影响我们看到的图像：站的位置、看的方向、眼睛的大小等。在相机模型中，同样需要具备这些要素：</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">struct</span> <span class="n">Camera</span>
+<span class="lineno"> 2</span> <span class="p">{</span>
+<span class="lineno"> 3</span>     <span class="p">...</span>
+<span class="lineno"> 4</span>     <span class="n">Point4D</span> <span class="n">pos</span><span class="p">;</span>    <span class="c1">// 位置</span>
+<span class="lineno"> 5</span>     <span class="n">Vector4D</span> <span class="n">dir</span><span class="p">;</span>   <span class="c1">// 方向</span>
+<span class="lineno"> 6</span>     <span class="kt">float</span> <span class="n">viewport_width</span><span class="p">,</span> <span class="n">viewport_height</span><span class="p">,</span> <span class="err">\</span>    <span class="c1">// 视平面宽度，高度</span>
+<span class="lineno"> 7</span>     <span class="n">viewport_cx</span><span class="p">,</span> <span class="n">viewport_cy</span><span class="p">;</span>                   <span class="c1">// 视平面 x 轴, y 轴</span>
+<span class="lineno"> 8</span>     <span class="kt">float</span> <span class="n">aspect_ratio</span><span class="p">;</span>                         <span class="c1">// 视角</span>
+<span class="lineno"> 9</span>     <span class="p">...</span>
+<span class="lineno">10</span>     <span class="kt">void</span> <span class="n">build_Euler</span><span class="p">(</span><span class="kt">int</span> <span class="n">cam_rot_seq</span><span class="p">);</span>          <span class="c1">// 欧拉相机</span>
+<span class="lineno">11</span>     <span class="kt">void</span> <span class="nf">build_UVN</span><span class="p">(</span><span class="kt">int</span> <span class="n">mode</span><span class="p">);</span>                   <span class="c1">// UVN 相机</span>
+<span class="lineno">12</span> <span class="p">};</span>
+</code></pre></div>
+
+<p>在实现中，可以构建欧拉相机和 UVN 相机两种模型，本节仅讲述欧拉相机。</p>
+
+<h2>1、面</h2>
+
+<p>从 Pipeline.h 中生成了同一世界坐标系中多个面与顶点组合成的渲染列表，相机位于相机的坐标系，想要显示世界坐标系中的物体，有两种方法实现：</p>
+
+<p>1）将相机坐标系变换到世界坐标系：显示时，需要计算相机的坐标、空间中物体与相机的相互关系，判断物体可见性并显示物体；</p>
+
+<p>2）将世界坐标系变换到相机坐标系：显示时，需要变换空间中的物体到相机坐标系，判断物体可见性并显示物体。</p>
+
+<p>软件渲染器计算物体时，需要大量的浮点运算，若将相机变换到世界坐标系，那么在计算空间中物体与相机的相互关系时，不利于归一化处理，会产生许多额外的浮点运算；若将世界坐标系中的物体变换到相机坐标系，则可通过对相机模型的简化，实现运算简化。</p>
+
+<p>在实现中，可以将单一物体转化至相机坐标系，也可以将渲染列表变换到坐标系，依赖于 mcam 矩阵完成变换。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="kt">void</span> <span class="nf">from_World</span><span class="p">(</span><span class="n">PObject4D</span> <span class="n">obj</span><span class="p">);</span>             <span class="c1">// 将物体变换到相机坐标系</span>
+<span class="lineno">2</span> <span class="kt">void</span> <span class="nf">from_World</span><span class="p">(</span><span class="n">PRenderList4D</span> <span class="n">rlist</span><span class="p">);</span>       <span class="c1">// 将渲染列表变换到相机坐标系</span>
+</code></pre></div>
+
+<p>转换后的坐标依然是 3D 坐标，仍不能显示出来，还需要我们将 3D 坐标投影到 2D Screen 上。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="kt">void</span> <span class="nf">to_Perspective</span><span class="p">(</span><span class="n">PObject4D</span> <span class="n">obj</span><span class="p">);</span>         <span class="c1">// 投影物体的顶点到 2D Screen 上</span>
+<span class="lineno">2</span> <span class="kt">void</span> <span class="nf">to_Perspective</span><span class="p">(</span><span class="n">PRenderList4D</span> <span class="n">rlist</span><span class="p">);</span>   <span class="c1">// 投影渲染列表的顶点到相机坐标系</span>
+<span class="lineno">3</span> <span class="kt">void</span> <span class="nf">to_Screen</span><span class="p">(</span><span class="n">PObject4D</span> <span class="n">obj</span><span class="p">);</span>              <span class="c1">// 将 2D Screen 上的顶点坐标映射到显示窗口</span>
+<span class="lineno">4</span> <span class="kt">void</span> <span class="nf">to_Screen</span><span class="p">(</span><span class="n">PRenderList4D</span> <span class="n">rlist</span><span class="p">);</span>        <span class="c1">// 将 2D Screen 上的顶点坐标映射到显示窗口</span>
+</code></pre></div>
+
+<p><img src="/img/cg/circleDemo.jpg" alt="circleDemo"></p>
+
+<p>在此，利用目前所实现的接口，将一个 3D 正方体显示出来，<a href="https://github.com/plinx/CG/blob/master/Raterization/Raterization/inc/LWin.cpp#L154">代码在此</a>（此后将不再贴完整代码，仅附上代码片段或链接）。</p>
+
+<p><img src="/img/cg/cubeDemo1.jpg" alt="cubeDemo1"></p>
+
+<p>大多数情况下，并不需要关注物体的背面，因为相机实际观察到的永远是遮挡在最前方的物体。这部分只需要求相机方向与物体各个面法向量的夹角即可，当一个面的法向量与相机方向相同时（即背向相机），需要将这个面标记为背面，这时候需要为面数据结构（Poly4D、PolyList4D）创建一个新的数据成员 state 来存储面的状态信息。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="n">Camera</span><span class="o">::</span><span class="n">remove_Backfaces</span><span class="p">(</span><span class="n">PObject4D</span> <span class="n">obj</span><span class="p">)</span>
+<span class="lineno"> 2</span> <span class="p">{</span>
+<span class="lineno"> 3</span>     <span class="p">...</span>
+<span class="lineno"> 4</span>     <span class="n">Vector4D</span> <span class="n">u</span><span class="p">(</span><span class="o">&amp;</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">vlist_trans</span><span class="p">[</span><span class="n">vert0</span><span class="p">],</span> <span class="o">&amp;</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">vlist_trans</span><span class="p">[</span><span class="n">vert1</span><span class="p">]);</span>
+<span class="lineno"> 5</span>     <span class="n">Vector4D</span> <span class="nf">v</span><span class="p">(</span><span class="o">&amp;</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">vlist_trans</span><span class="p">[</span><span class="n">vert0</span><span class="p">],</span> <span class="o">&amp;</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">vlist_trans</span><span class="p">[</span><span class="n">vert2</span><span class="p">]);</span>
+<span class="lineno"> 6</span>     <span class="n">Vector4D</span> <span class="nf">n</span><span class="p">(</span><span class="n">u</span><span class="p">.</span><span class="n">cross</span><span class="p">(</span><span class="o">&amp;</span><span class="n">v</span><span class="p">));</span>
+<span class="lineno"> 7</span>     <span class="n">Vector4D</span> <span class="nf">view</span><span class="p">(</span><span class="o">&amp;</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">vlist_trans</span><span class="p">[</span><span class="n">vert0</span><span class="p">],</span> <span class="o">&amp;</span><span class="n">pos</span><span class="p">);</span>
+<span class="lineno"> 8</span>     <span class="kt">float</span> <span class="n">dp</span> <span class="o">=</span> <span class="n">n</span><span class="p">.</span><span class="n">dot</span><span class="p">(</span><span class="o">&amp;</span><span class="n">view</span><span class="p">);</span>
+<span class="lineno"> 9</span>     <span class="k">if</span> <span class="p">(</span><span class="n">dp</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">)</span>
+<span class="lineno">10</span>     <span class="p">{</span>
+<span class="lineno">11</span>         <span class="n">curr_poly</span><span class="o">-&gt;</span><span class="n">state</span> <span class="o">|=</span> <span class="n">POLY4D_STATE_BACKFACE</span><span class="p">;</span>
+<span class="lineno">12</span>     <span class="p">}</span>
+<span class="lineno">13</span> <span class="p">}</span>
+</code></pre></div>
+
+<p><img src="/img/cg/cubeDemo2.jpg" alt="cubeDemo2"></p>
+
+<h2>2、物体剔除</h2>
+
+<p>在对物体进行一系列处理前，需要判断物体是否在有效视线区域内，若物体在视区外，则标记后无需进行多余的处理。物体有多判断方法，我的实现中使用了相对简单的包围球检测：每个物体存放其中心坐标和最大半径，根据球的外径进行判断。</p>
+
+<p>经过剔除后，仅保留途中橙色的物体。</p>
+
+<p><img src="/img/cg/cull.jpg" alt="cull"></p>
+
+<h2>3、透视变换</h2>
+
+<p>透视变化可以理解成归一化处理，用通俗的话说就是按比例缩放至同一大小的平面，《大师技巧》图6.35中描绘了透视变换将视景体变成长方形，甚妙。在这里我从另外一个角度贴出透视变换的理解图。</p>
+
+<p><img src="/img/cg/perspective.jpg" alt="perspective"></p>
+
+<h2>4、成像</h2>
+
+<p>将透支生成的坐标，按比例放大到显示窗口中。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="n">Camera</span><span class="o">::</span><span class="n">to_Screen</span><span class="p">(</span><span class="n">PRenderList4D</span> <span class="n">rlist</span><span class="p">)</span>
+<span class="lineno"> 2</span> <span class="p">{</span>
+<span class="lineno"> 3</span>     <span class="p">...</span>
+<span class="lineno"> 4</span>     <span class="kt">float</span> <span class="n">alpha</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">viewport_width</span><span class="p">;</span>
+<span class="lineno"> 5</span>     <span class="kt">float</span> <span class="n">beta</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">viewport_height</span><span class="p">;</span>
+<span class="lineno"> 6</span> 
+<span class="lineno"> 7</span>     <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">vertex</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">vertex</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">;</span> <span class="n">vertex</span><span class="o">++</span><span class="p">)</span>
+<span class="lineno"> 8</span>     <span class="p">{</span>
+<span class="lineno"> 9</span>         <span class="n">curr_poly</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="n">vertex</span><span class="p">].</span><span class="n">x</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">curr_poly</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="n">vertex</span><span class="p">].</span><span class="n">x</span><span class="p">;</span>
+<span class="lineno">10</span>         <span class="n">curr_poly</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="n">vertex</span><span class="p">].</span><span class="n">y</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">+</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">curr_poly</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="n">vertex</span><span class="p">].</span><span class="n">y</span><span class="p">;</span>
+<span class="lineno">11</span>     <span class="p">}</span>
+<span class="lineno">12</span> <span class="p">}</span>
+</code></pre></div>
+
+<p>至此，3D 流水线有了进一步的变化。</p>
+
+<p><img src="/img/cg/pipeline3.jpg" alt="pipeline3"></p>
+
+<hr>
+
+<p>如果你发现我文章中的问题或希望与我交流，可以给我发邮件：<a href="mailto:plinux@qq.com">plinux@qq.com</a>。</p>
+
+<p>如果你读后有些许收获，也可以到我的 Github <a href="https://github.com/plinx">点赞支持</a>。</p>
+
+<p>&copy; 2015 plinx</p>
+
+</div>
+
+      </div>
+    </body>
+</html>

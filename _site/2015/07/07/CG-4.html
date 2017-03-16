@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta http-equiv="Cache-Control" content="no-transform">
+        <title>CG4 - 3D 流水线</title>
+        <meta name="viewport" content="width=device-width">
+
+        <!-- Latex support -->
+        <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+
+        <!-- syntax highlighting CSS -->
+        <link rel="stylesheet" href="/css/pygments.css">
+
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="/css/main.css">
+
+        <!-- Logo -->
+        <link rel="Shortcut Icon" href="/img/LP.png">
+
+    </head>
+    <body>
+      <div class="site">
+        <h1>CG4 - 3D 流水线</h1>
+<p class="meta">07 Jul 2015</p>
+
+<div class="post">
+<h2>0、概述</h2>
+
+<p><strong>流水线</strong>又称为装配线,一种工业上的生产方式，指每一个生产单位只专注处理某一个片段的工作，以提高工作效率及产量。（引自<a href="http://baike.baidu.com/link?url=v6OLqTgXx8ZkXhyi-vvvsuw6xvbqAwtu10axZuTHIIvIIgYFQzB-OAtFXkwLSodOKK6fDrb2TxvyzzqcY3ar8K">百度百科</a>）</p>
+
+<p>3D 流水线（3D pipeline，也称 3D 管线）是指将软件渲染器实现渲染的整个过程按功能分割成各个部分，将每个部分只处理其相应的内容，然后将整个过程串联起来。流水线的优势在于，每个部分只需要关注其职责范围内的工作，不会产生业务交叉，只有各部分的处理结果对后续工序有影响。</p>
+
+<p>3D 流水线的实现存放在 <a href="https://github.com/plinx/CG/blob/master/Raterization/Raterization/inc/Pipeline.h">Pipeline.h</a> 中，这里先介绍一个最粗略的 3D 流水线，随着每一部分的深入再对其细化和完善。</p>
+
+<p><img src="/img/cg/pipeline1.jpg" alt="pipeline1"></p>
+
+<h2>1、物体</h2>
+
+<p>从一个纯粹的物体出发，考虑要将一个物体绘制出来，需要几个基本属性：</p>
+
+<ul>
+<li>局部坐标：表示物体在局部坐标中的位置</li>
+<li>顶点数组：表示物体各个面的划分出的顶点</li>
+<li>面数组：表示物体的面与顶点数组点的对应关系</li>
+</ul>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">struct</span> <span class="n">Object4D</span> 
+<span class="lineno"> 2</span> <span class="p">{</span>
+<span class="lineno"> 3</span>     <span class="p">...</span>
+<span class="lineno"> 4</span>     <span class="c1">// 世界坐标，用于变换</span>
+<span class="lineno"> 5</span>     <span class="n">Point4D</span> <span class="n">world_pos</span><span class="p">;</span>
+<span class="lineno"> 6</span>     <span class="c1">// 初始化为局部坐标顶点</span>
+<span class="lineno"> 7</span>     <span class="c1">// 此处用了两个数组，一个数组存储原始的顶点数据，一个数组存储坐标变换后的数据</span>
+<span class="lineno"> 8</span>     <span class="n">Vertex4D</span> <span class="n">vlist_local</span><span class="p">[</span><span class="n">OBJECT4D_MAX_VERTICES</span><span class="p">];</span>
+<span class="lineno"> 9</span>     <span class="n">Vertex4D</span> <span class="n">vlist_trans</span><span class="p">[</span><span class="n">OBJECT4D_MAX_VERTICES</span><span class="p">];</span>
+<span class="lineno">10</span>     <span class="n">Poly4D</span> <span class="n">plist</span><span class="p">[</span><span class="n">OBJECT4D_MAX_POLYS</span><span class="p">];</span>
+<span class="lineno">11</span>     <span class="p">...</span>
+<span class="lineno">12</span> <span class="p">};</span>
+</code></pre></div>
+
+<p>一个物体存储了许多个面与许多个顶点，两个面可能有 1 - 2 个公用顶点，如果存储面的结构中依然使用顶点数组进行存储，会造成比较大的资源浪费。实际实现中，只需要存储指向顶点数组的指针和对应顶点的偏移信息即可。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="k">struct</span> <span class="n">Poly4D</span>
+<span class="lineno">2</span> <span class="p">{</span>
+<span class="lineno">3</span>     <span class="p">...</span>
+<span class="lineno">4</span>     <span class="n">PVertex4D</span> <span class="n">vlist</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="lineno">5</span>     <span class="kt">int</span> <span class="n">vert</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+<span class="lineno">6</span> <span class="p">};</span>
+</code></pre></div>
+
+<h2>2、渲染列表</h2>
+
+<p>从世界坐标系的整体出发，渲染列表代表着实际空间中的多个物体。实际上，在渲染列表中已经没有了物体的表示，保留下来的是物体的面的信息。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="k">struct</span> <span class="n">RenderList4D</span>
+<span class="lineno">2</span> <span class="p">{</span>
+<span class="lineno">3</span>     <span class="p">...</span>
+<span class="lineno">4</span>     <span class="n">PPolyList4D</span> <span class="n">poly_ptrs</span><span class="p">[</span><span class="n">RENDERLIST4D_MAX_POLYS</span><span class="p">];</span>
+<span class="lineno">5</span>     <span class="n">PolyList4D</span> <span class="n">poly_data</span><span class="p">[</span><span class="n">RENDERLIST4D_MAX_POLYS</span><span class="p">];</span>
+<span class="lineno">6</span> <span class="p">};</span>
+</code></pre></div>
+
+<p>渲染列表中的面与物体中的面数据格式并不完全相同，因为在物体中，面的顶点是用指针表示的，若渲染列表中的面的顶点仍使用指针，会出现从渲染列表指向物体的指针，若物体在渲染过程中被回收或改变，那指针指向的内容可能也被对应改变了。所以在渲染列表的面结构中，需要真实地创建面的数组空间。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">struct</span> <span class="n">PolyList4D</span>
+<span class="lineno"> 2</span> <span class="p">{</span>
+<span class="lineno"> 3</span>     <span class="p">...</span>
+<span class="lineno"> 4</span>     <span class="c1">// vlist 用于存储变换前的顶点，tvlist 用于存储变换后的顶点</span>
+<span class="lineno"> 5</span>     <span class="n">Vertex4D</span> <span class="n">vlist</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+<span class="lineno"> 6</span>     <span class="n">Vertex4D</span> <span class="n">tvlist</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+<span class="lineno"> 7</span> 
+<span class="lineno"> 8</span>     <span class="c1">// 将渲染面列表设计成双向链表，此处也可以设计成数组</span>
+<span class="lineno"> 9</span>     <span class="n">PolyList4D</span><span class="o">*</span> <span class="n">prev</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="lineno">10</span>     <span class="n">PolyList4D</span><span class="o">*</span> <span class="n">next</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="lineno">11</span> <span class="p">};</span>
+</code></pre></div>
+
+<h2>3、坐标变换</h2>
+
+<p>物体和渲染列表均支持两种操作：旋转和平移。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">struct</span> <span class="n">Object4D</span>
+<span class="lineno"> 2</span> <span class="p">{</span>
+<span class="lineno"> 3</span>     <span class="p">...</span>
+<span class="lineno"> 4</span>     <span class="kt">void</span> <span class="n">rotate</span><span class="p">(</span><span class="n">PMatrix4x4</span> <span class="n">m</span><span class="p">,</span> <span class="n">TransformMode</span> <span class="n">mode</span><span class="p">,</span> <span class="kt">int</span> <span class="n">basis</span><span class="p">);</span>
+<span class="lineno"> 5</span>     <span class="kt">void</span> <span class="nf">to_World</span><span class="p">(</span><span class="n">TransformMode</span> <span class="n">mode</span> <span class="o">=</span> <span class="n">TRANSFORM_LOCAL_TO_TRANS</span><span class="p">);</span>
+<span class="lineno"> 6</span> <span class="p">};</span>
+<span class="lineno"> 7</span> <span class="k">struct</span> <span class="n">RenderList4D</span>
+<span class="lineno"> 8</span> <span class="p">{</span>
+<span class="lineno"> 9</span>     <span class="p">...</span>
+<span class="lineno">10</span>     <span class="kt">void</span> <span class="n">rotate</span><span class="p">(</span><span class="n">PMatrix4x4</span> <span class="n">m</span><span class="p">,</span> <span class="n">TransformMode</span> <span class="n">mode</span><span class="p">);</span>
+<span class="lineno">11</span>     <span class="kt">void</span> <span class="nf">to_World</span><span class="p">(</span><span class="n">PPoint4D</span> <span class="n">pos</span><span class="p">,</span> <span class="n">TransformMode</span> <span class="n">mode</span><span class="p">);</span>
+<span class="lineno">12</span> <span class="p">};</span>
+</code></pre></div>
+
+<p><img src="/img/cg/triangleDemo.jpg" alt="triangleDemo"></p>
+
+<p>此时再看 3D 流水线，在物体变换到顶点之前，加入了“局部坐标=&gt;世界坐标”的变换过程：</p>
+
+<p><img src="/img/cg/pipeline2.jpg" alt="pipeline2"></p>
+
+<p>事实上，这部分实现得并不好：
+1）两个 to_World 没有统一接口，Object4D 中的 world_pos 并不是必须的，需要时创建即可；
+2）rotate 实际效果取决于 PMatrix4x4，若变换矩阵为平移矩阵，这里的 rotate 将出现“旋转导致了平移效果”的二义性。</p>
+
+<p>添加更多的 API wrapper 和校验或许是一个不错的选择，当然，就目前而言这并不影响继续前行。</p>
+
+<hr>
+
+<p>如果你发现我文章中的问题或希望与我交流，可以给我发邮件：<a href="mailto:plinux@qq.com">plinux@qq.com</a>。</p>
+
+<p>如果你读后有些许收获，也可以到我的 Github <a href="https://github.com/plinx">点赞支持</a>。</p>
+
+<p>&copy; 2015 plinx</p>
+
+</div>
+
+      </div>
+    </body>
+</html>

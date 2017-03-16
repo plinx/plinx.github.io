@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta http-equiv="Cache-Control" content="no-transform">
+        <title>Effective C++ Notes - 7</title>
+        <meta name="viewport" content="width=device-width">
+
+        <!-- Latex support -->
+        <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+
+        <!-- syntax highlighting CSS -->
+        <link rel="stylesheet" href="/css/pygments.css">
+
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="/css/main.css">
+
+        <!-- Logo -->
+        <link rel="Shortcut Icon" href="/img/LP.png">
+
+    </head>
+    <body>
+      <div class="site">
+        <h1>Effective C++ Notes - 7</h1>
+<p class="meta">23 Jun 2015</p>
+
+<div class="post">
+<h2>6、Inheritance and Object-Oriented Design</h2>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 32 : Make sure public inheritance models &quot;is-a.&quot;
+</code></pre></div>
+<p>“public 继承”意味着 is-a。适用于 base classes 身上的每一件事情一定也适用于 
+derived classes 身上，因为每一个 derived class 对象也是一个 base class 对象。</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 33 : Avoid hiding inherited names.
+</code></pre></div>
+<p>在不同的域中，变量的遮掩是从内到外的。例如：</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="lineno">2</span> <span class="kt">void</span> <span class="nf">inner</span><span class="p">()</span> <span class="p">{</span>
+<span class="lineno">3</span>     <span class="kt">double</span> <span class="n">x</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">;</span>
+<span class="lineno">4</span>     <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">x</span><span class="p">;</span>      <span class="c1">// double x</span>
+<span class="lineno">5</span> <span class="p">}</span>
+</code></pre></div>
+
+<p>在继承中，派生类对基类也相当于一个内部域，若在派生类中重载了基类中的一个函数，将遮掩基类中所有的同名函数。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
+<span class="lineno"> 2</span> <span class="nl">public:</span>
+<span class="lineno"> 3</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">func1</span><span class="p">()</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno"> 4</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+<span class="lineno"> 5</span> <span class="p">};</span>
+<span class="lineno"> 6</span> <span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
+<span class="lineno"> 7</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">func1</span><span class="p">();</span>
+<span class="lineno"> 8</span> <span class="p">};</span>
+<span class="lineno"> 9</span> 
+<span class="lineno">10</span> <span class="n">Derived</span> <span class="n">d</span><span class="p">;</span>
+<span class="lineno">11</span> <span class="n">d</span><span class="p">.</span><span class="n">func1</span><span class="p">();</span>      <span class="c1">// call Derived::func1()</span>
+<span class="lineno">12</span> <span class="n">d</span><span class="p">.</span><span class="n">func1</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>     <span class="c1">// error</span>
+</code></pre></div>
+
+<p>为了让基类的函数暴露在派生类中，可以使用 using 实现。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
+<span class="lineno"> 2</span> <span class="nl">public:</span>
+<span class="lineno"> 3</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">func1</span><span class="p">()</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno"> 4</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="nf">func2</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+<span class="lineno"> 5</span>     <span class="kt">void</span> <span class="nf">func2</span><span class="p">();</span>
+<span class="lineno"> 6</span>     <span class="kt">void</span> <span class="nf">func2</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+<span class="lineno"> 7</span> <span class="p">};</span>
+<span class="lineno"> 8</span> <span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
+<span class="lineno"> 9</span>     <span class="k">using</span> <span class="n">Base</span><span class="o">::</span><span class="n">func1</span><span class="p">;</span>
+<span class="lineno">10</span>     <span class="k">using</span> <span class="n">Base</span><span class="o">::</span><span class="n">func2</span><span class="p">;</span>
+<span class="lineno">11</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="nf">func1</span><span class="p">();</span>
+<span class="lineno">12</span>     <span class="kt">void</span> <span class="nf">func2</span><span class="p">();</span>
+<span class="lineno">13</span> <span class="p">};</span>
+<span class="lineno">14</span> 
+<span class="lineno">15</span> <span class="n">Derived</span><span class="p">;</span>
+<span class="lineno">16</span> <span class="n">d</span><span class="p">.</span><span class="n">func1</span><span class="p">();</span>      <span class="c1">// call Derived::func1()</span>
+<span class="lineno">17</span> <span class="n">d</span><span class="p">.</span><span class="n">func1</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>     <span class="c1">// call Base::fun21(int)</span>
+<span class="lineno">18</span> <span class="n">d</span><span class="p">.</span><span class="n">func2</span><span class="p">();</span>      <span class="c1">// call Derived::func2()</span>
+<span class="lineno">19</span> <span class="n">d</span><span class="p">.</span><span class="n">func2</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>     <span class="c1">// call Base::func2(int)</span>
+</code></pre></div>
+
+<p>然而当我们不使用 public 继承的 is-a 关系时，使用 using 不一定能够正确指向函数的域，
+此时可以使用转交函数（forwarding functions）实现。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
+<span class="lineno"> 2</span> <span class="nl">public:</span>
+<span class="lineno"> 3</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">func1</span><span class="p">()</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno"> 4</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+<span class="lineno"> 5</span> <span class="p">};</span>
+<span class="lineno"> 6</span> <span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span> <span class="p">{</span>
+<span class="lineno"> 7</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">func1</span><span class="p">()</span> <span class="p">{</span> <span class="n">Based</span><span class="o">::</span><span class="n">func1</span><span class="p">();</span> <span class="p">}</span>
+<span class="lineno"> 8</span> <span class="p">};</span>
+<span class="lineno"> 9</span> 
+<span class="lineno">10</span> <span class="n">Derived</span> <span class="n">d</span><span class="p">;</span>
+<span class="lineno">11</span> <span class="n">d</span><span class="p">.</span><span class="n">func1</span><span class="p">();</span>      <span class="c1">// call Drived::func1()</span>
+<span class="lineno">12</span> <span class="n">d</span><span class="p">.</span><span class="n">func1</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>     <span class="c1">// error</span>
+</code></pre></div>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 34 : Differentiate between inheritance of interface and inheritance of implementation.
+</code></pre></div>
+<p>在类的继承中，区分基类和派生类的中心在于：
+函数接口（function interfaces）和函数实现（function implementations）。</p>
+
+<p>作为类设计者，对类应该有三种期许：</p>
+
+<ul>
+<li>派生类只能继承接口</li>
+<li>派生类继承接口和实现，允许覆写（override）</li>
+<li>派生类继承接口和实现，不允许覆写</li>
+</ul>
+
+<p>这三种期许对应着 c++ 中三种函数声明方式：</p>
+
+<ul>
+<li>纯虚函数 pure virtual</li>
+<li>（非纯）虚函数 impure virtual</li>
+<li>非虚函数 non-virtual</li>
+</ul>
+
+<p>pure virtual 意味着派生类只继承其接口，但实际上，纯虚函数也可以有自己的函数实现。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
+<span class="lineno"> 2</span> <span class="nl">public:</span>
+<span class="lineno"> 3</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">func1</span><span class="p">()</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno"> 4</span> <span class="p">};</span>
+<span class="lineno"> 5</span> <span class="kt">void</span> <span class="n">Base</span><span class="o">::</span><span class="n">func1</span><span class="p">()</span> <span class="p">{...}</span>
+<span class="lineno"> 6</span> <span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="p">{</span>
+<span class="lineno"> 7</span>     <span class="kt">void</span> <span class="n">func1</span><span class="p">();</span>
+<span class="lineno"> 8</span> <span class="p">};</span>
+<span class="lineno"> 9</span> 
+<span class="lineno">10</span> <span class="n">Base</span> <span class="o">*</span><span class="n">pd</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Derived</span><span class="p">();</span>
+<span class="lineno">11</span> <span class="n">pd</span><span class="o">-&gt;</span><span class="n">func1</span><span class="p">();</span>            <span class="c1">// call Derived::func1()</span>
+<span class="lineno">12</span> <span class="n">pd</span><span class="o">-&gt;</span><span class="n">Based</span><span class="o">::</span><span class="n">func1</span><span class="p">();</span>     <span class="c1">// call Based::func1()</span>
+</code></pre></div>
+
+<p>impure virtual 提供函数的缺省版本，当派生类不想实现该接口时，将调用基类的接口实现。</p>
+
+<p>然而，当我们创建一个派生类，但类使用者可能会<strong>忘记</strong>去实现某个接口，从而导致结果与预期
+不同。</p>
+
+<p>有两种方法可以避免这种问题。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="c1">// method 1</span>
+<span class="lineno"> 2</span> <span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
+<span class="lineno"> 3</span> <span class="nl">public:</span>
+<span class="lineno"> 4</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">func2</span><span class="p">()</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno"> 5</span> <span class="nl">protected:</span>
+<span class="lineno"> 6</span>     <span class="kt">void</span> <span class="nf">defaultfunc2</span><span class="p">();</span>
+<span class="lineno"> 7</span> <span class="p">};</span>
+<span class="lineno"> 8</span> <span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span> <span class="p">{</span>
+<span class="lineno"> 9</span>     <span class="kt">void</span> <span class="n">func2</span><span class="p">()</span> <span class="p">{</span> <span class="n">defaultfunc2</span><span class="p">();</span> <span class="p">}</span>
+<span class="lineno">10</span> <span class="p">};</span>
+<span class="lineno">11</span> <span class="c1">// method 2 : better</span>
+<span class="lineno">12</span> <span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
+<span class="lineno">13</span> <span class="nl">public:</span>
+<span class="lineno">14</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">func2</span><span class="p">()</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno">15</span> <span class="p">};</span>
+<span class="lineno">16</span> <span class="kt">void</span> <span class="n">Base</span><span class="o">::</span><span class="n">func2</span><span class="p">()</span> <span class="p">{...}</span>
+<span class="lineno">17</span> <span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span> <span class="p">{</span>
+<span class="lineno">18</span> <span class="nl">public:</span>
+<span class="lineno">19</span>     <span class="kt">void</span> <span class="n">func2</span><span class="p">()</span> <span class="p">{</span> <span class="n">Base</span><span class="o">::</span><span class="n">func2</span><span class="p">();</span> <span class="p">}</span>
+<span class="lineno">20</span> <span class="p">};</span>
+</code></pre></div>
+
+<p>non-virtual 提供了持久化的接口，直到派生类想要制作特异化（specialization）的接口。</p>
+
+<p>《 C++ Primer 5th 》15.3 介绍了 c++11 的关键字 final 和 override。
+final 用于禁止覆盖，override 用于检查虚函数。</p>
+
+<p>&copy; 2015 plinx</p>
+
+</div>
+
+      </div>
+    </body>
+</html>

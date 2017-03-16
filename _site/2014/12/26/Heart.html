@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta http-equiv="Cache-Control" content="no-transform">
+        <title>Heart</title>
+        <meta name="viewport" content="width=device-width">
+
+        <!-- Latex support -->
+        <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+
+        <!-- syntax highlighting CSS -->
+        <link rel="stylesheet" href="/css/pygments.css">
+
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="/css/main.css">
+
+        <!-- Logo -->
+        <link rel="Shortcut Icon" href="/img/LP.png">
+
+    </head>
+    <body>
+      <div class="site">
+        <h1>Heart</h1>
+<p class="meta">26 Dec 2014</p>
+
+<div class="post">
+<p>利用 Computer Graphics 技术绘制的第一张渲染图：</p>
+
+<p><img src="/img/Heart/1.jpg" alt="1"></p>
+
+<p>实现使用了 GDI+ 的 bitmap 进行绘制，参照了 Milo 在知乎的<a href="http://www.zhihu.com/question/20187195">回答</a>。</p>
+
+<div class="highlight"><pre><code class="c++"><span class="lineno">  1</span> <span class="c1">// Header.h</span>
+<span class="lineno">  2</span> 
+<span class="lineno">  3</span> <span class="cp">#pragma once</span>
+<span class="lineno">  4</span> 
+<span class="lineno">  5</span> <span class="c1">// Exclude rarely-used stuff from Windows headers</span>
+<span class="lineno">  6</span> <span class="cp">#define WIN32_LEAN_AND_MEAN  </span>
+<span class="lineno">  7</span> <span class="c1">// Windows Header Files:</span>
+<span class="lineno">  8</span> <span class="cp">#include &lt;windows.h&gt;</span>
+<span class="lineno">  9</span> 
+<span class="lineno"> 10</span> <span class="c1">// C RunTime Header Files</span>
+<span class="lineno"> 11</span> <span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="lineno"> 12</span> <span class="cp">#include &lt;malloc.h&gt;</span>
+<span class="lineno"> 13</span> <span class="cp">#include &lt;memory.h&gt;</span>
+<span class="lineno"> 14</span> <span class="cp">#include &lt;tchar.h&gt;</span>
+<span class="lineno"> 15</span> 
+<span class="lineno"> 16</span> <span class="c1">// Source.cpp</span>
+<span class="lineno"> 17</span> <span class="cp">#include &quot;Header.h&quot;</span>
+<span class="lineno"> 18</span> <span class="cp">#include &lt;ObjIdl.h&gt;</span>
+<span class="lineno"> 19</span> <span class="cp">#include &lt;gdiplus.h&gt;</span>
+<span class="lineno"> 20</span> <span class="cp">#include &lt;math.h&gt;</span>
+<span class="lineno"> 21</span> 
+<span class="lineno"> 22</span> <span class="k">using</span> <span class="k">namespace</span> <span class="n">Gdiplus</span><span class="p">;</span>
+<span class="lineno"> 23</span> <span class="cp">#pragma comment (lib, &quot;Gdiplus.lib&quot;)</span>
+<span class="lineno"> 24</span> 
+<span class="lineno"> 25</span> <span class="n">LRESULT</span> <span class="n">CALLBACK</span> <span class="nf">WndProc</span><span class="p">(</span><span class="n">HWND</span><span class="p">,</span> <span class="n">UINT</span><span class="p">,</span> <span class="n">WPARAM</span><span class="p">,</span> <span class="n">LPARAM</span><span class="p">);</span>
+<span class="lineno"> 26</span> 
+<span class="lineno"> 27</span> <span class="kt">float</span> <span class="nf">f</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">,</span> <span class="kt">float</span> <span class="n">y</span><span class="p">,</span> <span class="kt">float</span> <span class="n">z</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno"> 28</span>     <span class="kt">float</span> <span class="n">a</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mf">9.0f</span> <span class="o">/</span> <span class="mf">4.0f</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="n">z</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+<span class="lineno"> 29</span>     <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">a</span> <span class="o">*</span> <span class="n">a</span> <span class="o">-</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">z</span> <span class="o">*</span> <span class="n">z</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">9.0f</span> <span class="o">/</span> <span class="mf">80.0f</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span> <span class="o">*</span> <span class="n">z</span> <span class="o">*</span> <span class="n">z</span><span class="p">;</span>
+<span class="lineno"> 30</span> <span class="p">}</span>
+<span class="lineno"> 31</span> 
+<span class="lineno"> 32</span> <span class="kt">float</span> <span class="nf">h</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">,</span> <span class="kt">float</span> <span class="n">z</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno"> 33</span>     <span class="k">for</span> <span class="p">(</span><span class="kt">float</span> <span class="n">y</span> <span class="o">=</span> <span class="mf">1.0f</span><span class="p">;</span> <span class="n">y</span> <span class="o">&gt;=</span> <span class="mf">0.0f</span><span class="p">;</span> <span class="n">y</span> <span class="o">-=</span> <span class="mf">0.001f</span><span class="p">)</span>
+<span class="lineno"> 34</span>         <span class="k">if</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">0.0f</span><span class="p">)</span>
+<span class="lineno"> 35</span>             <span class="k">return</span> <span class="n">y</span><span class="p">;</span>
+<span class="lineno"> 36</span>     <span class="k">return</span> <span class="mf">0.0f</span><span class="p">;</span>
+<span class="lineno"> 37</span> <span class="p">}</span>
+<span class="lineno"> 38</span> 
+<span class="lineno"> 39</span> <span class="n">VOID</span> <span class="nf">OnPaint</span><span class="p">(</span><span class="n">HDC</span> <span class="n">hdc</span><span class="p">)</span>
+<span class="lineno"> 40</span> <span class="p">{</span>
+<span class="lineno"> 41</span>     <span class="n">Graphics</span> <span class="n">graphics</span><span class="p">(</span><span class="n">hdc</span><span class="p">);</span>
+<span class="lineno"> 42</span>     <span class="n">Bitmap</span> <span class="o">*</span><span class="n">bitmap</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Bitmap</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">);</span>
+<span class="lineno"> 43</span>     <span class="n">INT</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">512</span><span class="p">;</span>
+<span class="lineno"> 44</span>     <span class="n">INT</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">512</span><span class="p">;</span>
+<span class="lineno"> 45</span>     <span class="n">Color</span> <span class="n">color</span><span class="p">;</span>
+<span class="lineno"> 46</span> 
+<span class="lineno"> 47</span>     <span class="k">for</span> <span class="p">(</span><span class="n">INT</span> <span class="n">sy</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">sy</span> <span class="o">&lt;</span> <span class="n">height</span><span class="p">;</span> <span class="o">++</span><span class="n">sy</span><span class="p">)</span>
+<span class="lineno"> 48</span>     <span class="p">{</span>
+<span class="lineno"> 49</span>         <span class="kt">float</span> <span class="n">z</span> <span class="o">=</span> <span class="mf">1.5f</span> <span class="o">-</span> <span class="n">sy</span> <span class="o">*</span> <span class="mf">3.0f</span> <span class="o">/</span> <span class="n">height</span><span class="p">;</span>
+<span class="lineno"> 50</span>         <span class="k">for</span> <span class="p">(</span><span class="n">INT</span> <span class="n">sx</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">sx</span> <span class="o">&lt;</span> <span class="n">width</span><span class="p">;</span> <span class="o">++</span><span class="n">sx</span><span class="p">)</span>
+<span class="lineno"> 51</span>         <span class="p">{</span>
+<span class="lineno"> 52</span>             <span class="kt">float</span> <span class="n">x</span> <span class="o">=</span> <span class="n">sx</span> <span class="o">*</span> <span class="mf">3.0f</span> <span class="o">/</span> <span class="n">width</span> <span class="o">-</span> <span class="mf">1.5f</span><span class="p">;</span>
+<span class="lineno"> 53</span>             <span class="kt">float</span> <span class="n">v</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mf">0.0f</span><span class="p">,</span> <span class="n">z</span><span class="p">);</span>
+<span class="lineno"> 54</span>             <span class="kt">int</span> <span class="n">r</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno"> 55</span>             <span class="k">if</span> <span class="p">(</span><span class="n">v</span> <span class="o">&lt;=</span> <span class="mf">0.0f</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno"> 56</span>                 <span class="kt">float</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">h</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">);</span>
+<span class="lineno"> 57</span>                 <span class="kt">float</span> <span class="n">ny</span> <span class="o">=</span> <span class="mf">0.001f</span><span class="p">;</span>
+<span class="lineno"> 58</span>                 <span class="kt">float</span> <span class="n">nx</span> <span class="o">=</span> <span class="n">h</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">ny</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">-</span> <span class="n">y0</span><span class="p">;</span>
+<span class="lineno"> 59</span>                 <span class="kt">float</span> <span class="n">nz</span> <span class="o">=</span> <span class="n">h</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span> <span class="o">+</span> <span class="n">ny</span><span class="p">)</span> <span class="o">-</span> <span class="n">y0</span><span class="p">;</span>
+<span class="lineno"> 60</span>                 <span class="kt">float</span> <span class="n">nd</span> <span class="o">=</span> <span class="mf">1.0f</span> <span class="o">/</span> <span class="n">sqrtf</span><span class="p">(</span><span class="n">nx</span> <span class="o">*</span> <span class="n">nx</span> <span class="o">+</span> <span class="n">ny</span> <span class="o">*</span> <span class="n">ny</span> <span class="o">+</span> <span class="n">nz</span> <span class="o">*</span> <span class="n">nz</span><span class="p">);</span>
+<span class="lineno"> 61</span>                 <span class="kt">float</span> <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">nx</span> <span class="o">+</span> <span class="n">ny</span> <span class="o">-</span> <span class="n">nz</span><span class="p">)</span> <span class="o">/</span> <span class="n">sqrtf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">nd</span> <span class="o">*</span> <span class="mf">0.5f</span> <span class="o">+</span> <span class="mf">0.5f</span><span class="p">;</span>
+<span class="lineno"> 62</span>                 <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span><span class="p">)(</span><span class="n">d</span> <span class="o">*</span> <span class="mf">255.0f</span><span class="p">);</span>
+<span class="lineno"> 63</span>             <span class="p">}</span>
+<span class="lineno"> 64</span>             <span class="n">color</span><span class="p">.</span><span class="n">SetValue</span><span class="p">(</span><span class="n">Color</span><span class="o">::</span><span class="n">MakeARGB</span><span class="p">(</span>
+<span class="lineno"> 65</span>                 <span class="p">(</span><span class="n">BYTE</span><span class="p">)(</span><span class="mi">255</span><span class="p">),</span>
+<span class="lineno"> 66</span>                 <span class="p">(</span><span class="n">BYTE</span><span class="p">)(</span><span class="n">r</span><span class="p">),</span>
+<span class="lineno"> 67</span>                 <span class="p">(</span><span class="n">BYTE</span><span class="p">)(</span><span class="mi">0</span><span class="p">),</span>
+<span class="lineno"> 68</span>                 <span class="p">(</span><span class="n">BYTE</span><span class="p">)(</span><span class="mi">0</span><span class="p">)</span>
+<span class="lineno"> 69</span>                 <span class="p">));</span>
+<span class="lineno"> 70</span>             <span class="n">bitmap</span><span class="o">-&gt;</span><span class="n">SetPixel</span><span class="p">(</span><span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">,</span> <span class="n">color</span><span class="p">);</span>
+<span class="lineno"> 71</span>         <span class="p">}</span>
+<span class="lineno"> 72</span>     <span class="p">}</span>
+<span class="lineno"> 73</span> 
+<span class="lineno"> 74</span>     <span class="n">graphics</span><span class="p">.</span><span class="n">DrawImage</span><span class="p">(</span><span class="n">bitmap</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">);</span>
+<span class="lineno"> 75</span> 
+<span class="lineno"> 76</span>     <span class="k">delete</span> <span class="n">bitmap</span><span class="p">;</span>
+<span class="lineno"> 77</span> <span class="p">}</span>
+<span class="lineno"> 78</span> 
+<span class="lineno"> 79</span> <span class="n">INT</span> <span class="n">WINAPI</span> <span class="nf">WinMain</span><span class="p">(</span><span class="n">HINSTANCE</span> <span class="n">hInstance</span><span class="p">,</span> <span class="n">HINSTANCE</span><span class="p">,</span> <span class="n">PSTR</span><span class="p">,</span> <span class="n">INT</span> <span class="n">iCmdShow</span><span class="p">)</span>
+<span class="lineno"> 80</span> <span class="p">{</span>
+<span class="lineno"> 81</span>     <span class="n">HWND</span> <span class="n">hwnd</span><span class="p">;</span>
+<span class="lineno"> 82</span>     <span class="n">MSG</span> <span class="n">msg</span><span class="p">;</span>
+<span class="lineno"> 83</span>     <span class="n">WNDCLASS</span> <span class="n">wndClass</span><span class="p">;</span>
+<span class="lineno"> 84</span>     <span class="n">GdiplusStartupInput</span> <span class="n">gdiInput</span><span class="p">;</span>
+<span class="lineno"> 85</span>     <span class="n">ULONG_PTR</span> <span class="n">gdiToken</span><span class="p">;</span>
+<span class="lineno"> 86</span> 
+<span class="lineno"> 87</span>     <span class="c1">// Initial GDI+</span>
+<span class="lineno"> 88</span>     <span class="n">GdiplusStartup</span><span class="p">(</span><span class="o">&amp;</span><span class="n">gdiToken</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">gdiInput</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="lineno"> 89</span> 
+<span class="lineno"> 90</span>     <span class="n">wndClass</span><span class="p">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">CS_HREDRAW</span> <span class="o">|</span> <span class="n">CS_VREDRAW</span><span class="p">;</span>
+<span class="lineno"> 91</span>     <span class="n">wndClass</span><span class="p">.</span><span class="n">lpfnWndProc</span> <span class="o">=</span> <span class="n">WndProc</span><span class="p">;</span>
+<span class="lineno"> 92</span>     <span class="n">wndClass</span><span class="p">.</span><span class="n">cbClsExtra</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno"> 93</span>     <span class="n">wndClass</span><span class="p">.</span><span class="n">cbWndExtra</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno"> 94</span>     <span class="n">wndClass</span><span class="p">.</span><span class="n">hInstance</span> <span class="o">=</span> <span class="n">hInstance</span><span class="p">;</span>
+<span class="lineno"> 95</span>     <span class="n">wndClass</span><span class="p">.</span><span class="n">hIcon</span> <span class="o">=</span> <span class="n">LoadIcon</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">IDI_APPLICATION</span><span class="p">);</span>
+<span class="lineno"> 96</span>     <span class="n">wndClass</span><span class="p">.</span><span class="n">hCursor</span> <span class="o">=</span> <span class="n">LoadCursor</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">IDC_ARROW</span><span class="p">);</span>
+<span class="lineno"> 97</span>     <span class="n">wndClass</span><span class="p">.</span><span class="n">hbrBackground</span> <span class="o">=</span> <span class="p">(</span><span class="n">HBRUSH</span><span class="p">)</span><span class="n">GetStockObject</span><span class="p">(</span><span class="n">WHITE_BRUSH</span><span class="p">);</span>
+<span class="lineno"> 98</span>     <span class="n">wndClass</span><span class="p">.</span><span class="n">lpszMenuName</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="lineno"> 99</span>     <span class="n">wndClass</span><span class="p">.</span><span class="n">lpszClassName</span> <span class="o">=</span> <span class="n">TEXT</span><span class="p">(</span><span class="s">&quot;Heart!&quot;</span><span class="p">);</span>
+<span class="lineno">100</span> 
+<span class="lineno">101</span>     <span class="n">RegisterClass</span><span class="p">(</span><span class="o">&amp;</span><span class="n">wndClass</span><span class="p">);</span>
+<span class="lineno">102</span> 
+<span class="lineno">103</span>     <span class="n">hwnd</span> <span class="o">=</span> <span class="n">CreateWindow</span><span class="p">(</span>
+<span class="lineno">104</span>         <span class="n">TEXT</span><span class="p">(</span><span class="s">&quot;Heart!&quot;</span><span class="p">),</span>   <span class="c1">// window class name</span>
+<span class="lineno">105</span>         <span class="n">TEXT</span><span class="p">(</span><span class="s">&quot;Heart!&quot;</span><span class="p">),</span>  <span class="c1">// window caption</span>
+<span class="lineno">106</span>         <span class="n">WS_OVERLAPPEDWINDOW</span><span class="p">,</span>      <span class="c1">// window style</span>
+<span class="lineno">107</span>         <span class="n">CW_USEDEFAULT</span><span class="p">,</span>            <span class="c1">// initial x position</span>
+<span class="lineno">108</span>         <span class="n">CW_USEDEFAULT</span><span class="p">,</span>            <span class="c1">// initial y position</span>
+<span class="lineno">109</span>         <span class="c1">//CW_USEDEFAULT,            // initial x size</span>
+<span class="lineno">110</span>         <span class="mi">512</span><span class="p">,</span>
+<span class="lineno">111</span>         <span class="c1">//CW_USEDEFAULT,            // initial y size</span>
+<span class="lineno">112</span>         <span class="mi">512</span><span class="p">,</span>
+<span class="lineno">113</span>         <span class="nb">NULL</span><span class="p">,</span>                     <span class="c1">// parent window handle</span>
+<span class="lineno">114</span>         <span class="nb">NULL</span><span class="p">,</span>                     <span class="c1">// window menu handle</span>
+<span class="lineno">115</span>         <span class="n">hInstance</span><span class="p">,</span>                <span class="c1">// program instance handle</span>
+<span class="lineno">116</span>         <span class="nb">NULL</span><span class="p">);</span>                    <span class="c1">// creation parameters</span>
+<span class="lineno">117</span> 
+<span class="lineno">118</span>     <span class="n">ShowWindow</span><span class="p">(</span><span class="n">hwnd</span><span class="p">,</span> <span class="n">iCmdShow</span><span class="p">);</span>
+<span class="lineno">119</span>     <span class="n">UpdateWindow</span><span class="p">(</span><span class="n">hwnd</span><span class="p">);</span>
+<span class="lineno">120</span> 
+<span class="lineno">121</span>     <span class="k">while</span> <span class="p">(</span><span class="n">GetMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="lineno">122</span>     <span class="p">{</span>
+<span class="lineno">123</span>         <span class="n">TranslateMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">);</span>
+<span class="lineno">124</span>         <span class="n">DispatchMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">);</span>
+<span class="lineno">125</span>     <span class="p">}</span>
+<span class="lineno">126</span> 
+<span class="lineno">127</span>     <span class="n">GdiplusShutdown</span><span class="p">(</span><span class="n">gdiToken</span><span class="p">);</span>
+<span class="lineno">128</span>     <span class="k">return</span> <span class="n">msg</span><span class="p">.</span><span class="n">wParam</span><span class="p">;</span>
+<span class="lineno">129</span> <span class="p">}</span>
+<span class="lineno">130</span> 
+<span class="lineno">131</span> <span class="n">LRESULT</span> <span class="n">CALLBACK</span> <span class="nf">WndProc</span><span class="p">(</span><span class="n">HWND</span> <span class="n">hwnd</span><span class="p">,</span> <span class="n">UINT</span> <span class="n">msg</span><span class="p">,</span> <span class="n">WPARAM</span> <span class="n">wp</span><span class="p">,</span> <span class="n">LPARAM</span> <span class="n">lp</span><span class="p">)</span>
+<span class="lineno">132</span> <span class="p">{</span>
+<span class="lineno">133</span>     <span class="n">HDC</span> <span class="n">hdc</span><span class="p">;</span>
+<span class="lineno">134</span>     <span class="n">PAINTSTRUCT</span> <span class="n">ps</span><span class="p">;</span>
+<span class="lineno">135</span> 
+<span class="lineno">136</span>     <span class="k">switch</span> <span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="lineno">137</span>     <span class="p">{</span>
+<span class="lineno">138</span>     <span class="k">case</span> <span class="n">WM_PAINT</span>:
+<span class="lineno">139</span>         <span class="n">hdc</span> <span class="o">=</span> <span class="n">BeginPaint</span><span class="p">(</span><span class="n">hwnd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ps</span><span class="p">);</span>
+<span class="lineno">140</span>         <span class="n">OnPaint</span><span class="p">(</span><span class="n">hdc</span><span class="p">);</span>
+<span class="lineno">141</span>         <span class="n">EndPaint</span><span class="p">(</span><span class="n">hwnd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ps</span><span class="p">);</span>
+<span class="lineno">142</span>         <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno">143</span>     <span class="k">case</span> <span class="n">WM_DESTROY</span>:
+<span class="lineno">144</span>         <span class="n">PostQuitMessage</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="lineno">145</span>         <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno">146</span> 
+<span class="lineno">147</span>     <span class="nl">default:</span>
+<span class="lineno">148</span>         <span class="k">return</span> <span class="n">DefWindowProc</span><span class="p">(</span><span class="n">hwnd</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">wp</span><span class="p">,</span> <span class="n">lp</span><span class="p">);</span>
+<span class="lineno">149</span>     <span class="p">}</span>
+<span class="lineno">150</span> <span class="p">}</span>
+</code></pre></div>
+
+<p>图形学学得不多，做了一点小改进，利用了 <a href="http://baike.baidu.com/link?url=uE6U8dr78AL_OBivgUUMCXs8YwlTYbg1BRDgIIazQ3HakQkS4uyL2d9aqIvEnlrL6pc32VF5-KlkPXGlO-Jl0q">FSAA(Full Screen Anti-Aliasing)</a> 中的 SSAA(Super Sampling Anti-Aliasing)。</p>
+
+<p>简单的做法就是，渲染更大分辨率(1024x1024)的图片，然后缩放，效果图如下 :</p>
+
+<p><img src="/img/Heart/2.jpg" alt="2"></p>
+
+<p>当然，这样的结果是运算时间多了4倍，很多时候这是不可接受的，所以需要 MSAA/CSAA/CFAA 等不同的抗锯齿方法。</p>
+
+<p>下一步就是学习图形学理论，以及各种实际应用方法。 </p>
+
+<p>&copy; 2014 plinx</p>
+
+</div>
+
+      </div>
+    </body>
+</html>
