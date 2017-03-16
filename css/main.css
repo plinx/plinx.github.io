@@ -162,6 +162,7 @@ pre {
 }
 .post pre {
   font-family: Consolas, Arial, "Microsoft YaHei", sans-serif;
+  box-shadow: 0px 0px;
   background-color: #121A2A;
   padding: 10px;
   position: relative;
