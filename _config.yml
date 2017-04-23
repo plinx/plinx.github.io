@@ -1,7 +1,7 @@
 name: Plinx's Blog
 encoding: utf-8
 markdown: kramdown
-pygments: true
 highlighter: rouge
 redcarpet:
   extensions: ["tables"]
+port: 5000

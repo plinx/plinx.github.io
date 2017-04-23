@@ -16,7 +16,7 @@ html, body {
 
 body {
   background-color: #CCCCCC;
-  font-family: Consolas, 'Times New Roman', Arial, "Microsoft YaHei", sans-serif;
+  font-family: Consolas, Arial, "Microsoft YaHei", sans-serif;
   font-size: medium;
   text-align: center;
 }
@@ -54,17 +54,12 @@ a:visited:hover { color: #FF3366; }
 
 table {
   font-size: 85%;
-  margin: auto;
   min-width: 300px;
   border-spacing: 0px;
 }
 
 table td {
-  padding: 5px 8px;
   text-align: left;
-  border-top: 1px solid #ddd;
-  min-width: 120px;
-  max-width: 350px;
 }
 
 table th {
@@ -160,16 +155,18 @@ table tbody tr:hover { background: #8bd4db; }
 /*****************************************************************************/
 
 /* standard */
+pre {
+  font-family: Consolas, Arial, "Microsoft YaHei", sans-serif;
+  box-shadow: 0px 3px 15px 5px;
+}
 .post pre {
+  font-family: Consolas, Arial, "Microsoft YaHei", sans-serif;
+  box-shadow: 0px 0px;
   background-color: #121A2A;
   padding: 10px;
   position: relative;
-  margin-bottom: 20px;
   word-break: break-all;
   word-wrap: break-word;
-  box-shadow: 0px 2px 12px 2px;
-  -webkit-box-shadow: 0px 2px 12px 2px;
-  -moz-box-shadow: 0px 2px 12px 2px;
   cursor: url(/img/mouse/pencil.cur), default;
 }
 
@@ -180,7 +177,7 @@ table tbody tr:hover { background: #8bd4db; }
 }
 
 .post code {
-  font-family: Consolas, 'Times New Roman', Arial, "Microsoft YaHei", sans-serif;
+  font-family: Consolas, Arial, "Microsoft YaHei", sans-serif;
   font-size: 15px;
   color: #39C1DA;
   background-color: #121A2A;

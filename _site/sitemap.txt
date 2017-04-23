@@ -1,7 +1,8 @@
 
-/index.html
+/
 /sitemap.txt
 
+/2017/04/24/projects.html
 /2015/07/08/CG-6.html
 /2015/07/07/CG-5.html
 /2015/07/07/CG-4.html
@@ -9,19 +10,19 @@
 /2015/07/05/CG-2.html
 /2015/07/02/CG-1.html
 /2015/07/01/CG-0.html
-/2015/06/24/Effective-C%2B%2B-Notes-8.html
-/2015/06/23/Effective-C%2B%2B-Notes-7.html
-/2015/04/29/Effective-C%2B%2B-Notes-6.html
-/2015/04/07/Effective-C%2B%2B-Notes-5.html
-/2015/04/06/Effective-C%2B%2B-Notes-4.html
-/2015/04/02/Effective-C%2B%2B-Notes-3.html
-/2015/04/01/Effective-C%2B%2B-Notes-2.html
-/2015/03/31/Effective-C%2B%2B-Notes-1.html
+/2015/06/24/Effective-C++-Notes-8.html
+/2015/06/23/Effective-C++-Notes-7.html
+/2015/04/29/Effective-C++-Notes-6.html
+/2015/04/07/Effective-C++-Notes-5.html
+/2015/04/06/Effective-C++-Notes-4.html
+/2015/04/02/Effective-C++-Notes-3.html
+/2015/04/01/Effective-C++-Notes-2.html
+/2015/03/31/Effective-C++-Notes-1.html
 /2014/12/26/Heart.html
-/2014/12/20/Latex-Test.html
+/2014/12/20/latex-test.html
 /2014/07/10/Gdesign-Web-pages.html
 /2014/04/06/Web-Design.html
-/2014/03/30/Video-Demo.html
-/2014/03/20/Matlab-Hough.html
-/2014/03/14/Code-Test.html
-/2014/03/10/Gh-Pages-Guide.html
+/2014/03/30/video-demo.html
+/2014/03/20/matlab-hough.html
+/2014/03/14/code-test.html
+/2014/03/10/gh-pages-guide.html

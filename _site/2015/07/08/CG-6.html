@@ -27,42 +27,58 @@
 <p class="meta">08 Jul 2015</p>
 
 <div class="post">
-<h2>0、概述</h2>
+<h2 id="0概述">0、概述</h2>
 
 <p>色彩是图像不变的主题，要让软件渲染器支持色彩，只需要给面加上色彩的数据属性即可。但是要让软件渲染器支持真实世界的色彩，还需要更新绘图的函数，当实现了让物体随参数显示渐变色彩时，光照效果也就很容易实现了。</p>
 
-<h2>1、绘图函数</h2>
+<h2 id="1绘图函数">1、绘图函数</h2>
 
 <p>在线框时代，只需要实现逐点绘线即可，所以在 drawPixel 外面做一层 wrapper 就可以应对所有情况。但是当开始绘制色彩时，往往需要一个面一个面地去绘制，如果仍调用 drawPixel 将产生大量点计算和颜色计算，所以迫切需要一个批量操作的绘图函数。</p>
 
 <p>在这里，可以根据最初创建显示缓存的方式来进行设计：创建显示缓存时，使用了逐行分配的方式进行内存索引，所以可以实现一个绘制单行的绘图函数避免重复寻址。</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="n">Painter</span><span class="o">::</span><span class="n">drawHorizonLine</span><span class="p">(</span><span class="kt">int</span> <span class="n">x1</span><span class="p">,</span> <span class="kt">int</span> <span class="n">x2</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">,</span> <span class="n">Color</span><span class="o">&amp;</span> <span class="n">color</span><span class="p">)</span>
-<span class="lineno"> 2</span> <span class="p">{</span>
-<span class="lineno"> 3</span>  <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">_height</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
-<span class="lineno"> 4</span>  <span class="c1">// the judge put in _drawFlatBottomTriangle and _drawFlatTopTriangle</span>
-<span class="lineno"> 5</span>  <span class="k">if</span> <span class="p">(</span><span class="n">x2</span> <span class="o">&lt;</span> <span class="n">x1</span><span class="p">)</span>
-<span class="lineno"> 6</span>      <span class="n">std</span><span class="o">::</span><span class="n">swap</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">);</span>
-<span class="lineno"> 7</span>  <span class="k">if</span> <span class="p">(</span><span class="n">x1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="n">x1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-<span class="lineno"> 8</span>  <span class="k">if</span> <span class="p">(</span><span class="n">x2</span> <span class="o">&gt;</span> <span class="n">_width</span><span class="p">)</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">_width</span><span class="p">;</span>
-<span class="lineno"> 9</span>  <span class="kt">int</span> <span class="n">tmpA</span> <span class="o">=</span> <span class="n">color</span><span class="p">.</span><span class="n">A</span><span class="p">;</span>
-<span class="lineno">10</span>  <span class="n">_pixel</span> <span class="o">=</span> <span class="n">_scanLine</span> <span class="o">+</span> <span class="n">_bytesPerLine</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="p">);</span>
-<span class="lineno">11</span>  <span class="n">_pixel</span> <span class="o">+=</span> <span class="n">x1</span> <span class="o">*</span> <span class="mi">3</span><span class="p">;</span>
-<span class="lineno">12</span>  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x1</span><span class="p">;</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">x2</span><span class="p">;</span> <span class="n">x</span><span class="o">++</span><span class="p">)</span>
-<span class="lineno">13</span>  <span class="p">{</span>
-<span class="lineno">14</span>      <span class="n">_setColor</span><span class="p">(</span><span class="n">_pixel</span><span class="p">,</span> <span class="n">color</span><span class="p">);</span>
-<span class="lineno">15</span>      <span class="n">_pixel</span> <span class="o">+=</span> <span class="mi">3</span><span class="p">;</span>
-<span class="lineno">16</span>  <span class="p">}</span>
-<span class="lineno">17</span> <span class="p">}</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17</pre></td><td class="code"><pre><span class="kr">inline</span> <span class="kt">void</span> <span class="n">Painter</span><span class="o">::</span><span class="n">drawHorizonLine</span><span class="p">(</span><span class="kt">int</span> <span class="n">x1</span><span class="p">,</span> <span class="kt">int</span> <span class="n">x2</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">,</span> <span class="n">Color</span><span class="o">&amp;</span> <span class="n">color</span><span class="p">)</span>
+<span class="p">{</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">_height</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+	<span class="c1">// the judge put in _drawFlatBottomTriangle and _drawFlatTopTriangle
+</span>	<span class="k">if</span> <span class="p">(</span><span class="n">x2</span> <span class="o">&lt;</span> <span class="n">x1</span><span class="p">)</span>
+		<span class="n">std</span><span class="o">::</span><span class="n">swap</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">);</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">x1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="n">x1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">x2</span> <span class="o">&gt;</span> <span class="n">_width</span><span class="p">)</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">_width</span><span class="p">;</span>
+	<span class="kt">int</span> <span class="n">tmpA</span> <span class="o">=</span> <span class="n">color</span><span class="p">.</span><span class="n">A</span><span class="p">;</span>
+	<span class="n">_pixel</span> <span class="o">=</span> <span class="n">_scanLine</span> <span class="o">+</span> <span class="n">_bytesPerLine</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="p">);</span>
+	<span class="n">_pixel</span> <span class="o">+=</span> <span class="n">x1</span> <span class="o">*</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x1</span><span class="p">;</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">x2</span><span class="p">;</span> <span class="n">x</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">_setColor</span><span class="p">(</span><span class="n">_pixel</span><span class="p">,</span> <span class="n">color</span><span class="p">);</span>
+        <span class="n">_pixel</span> <span class="o">+=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
 
 <p>依托于 drawHorizonLine，可以实现针对三角形 Gouraud 着色函数的 drawTriangle。</p>
 
 <p>在这里需要考虑的情况很多：1）越界；2）坐标顺序；3）插值计算；4）平顶三角形、平底三角形分割。<a href="https://github.com/plinx/CG/blob/master/Raterization/Raterization/inc/LWin.cpp#L289">详见代码</a>。</p>
 
-<p><img src="/img/cg/drawTriangle.jpg" alt="drawTriangle"></p>
+<p><img src="/img/cg/drawTriangle.jpg" alt="drawTriangle" /></p>
 
-<h2>2、光照</h2>
+<h2 id="2光照">2、光照</h2>
 
 <p>实现光照的处理方法与求物体背面的方法很类似，都需要两个向量：面的法向量和从光照/相机出发的方向向量。</p>
 
@@ -73,13 +89,13 @@
 <p>
 $$
 \begin{array} {}
-结构 & 优势 & 劣势 \\
+结构 &amp; 优势 &amp; 劣势 \\
 \hline
-物体对象中 & 
-各个面共用顶点，Gouraud 着色平滑 &
+物体对象中 &amp; 
+各个面共用顶点，Gouraud 着色平滑 &amp;
 当物体面的数量很大时，计算量大 \\
-渲染列表中 &
-各个面均为必须要渲染的面，冗余少，计算速度快 &
+渲染列表中 &amp;
+各个面均为必须要渲染的面，冗余少，计算速度快 &amp;
 着色失真
 \end{array}
 $$
@@ -89,56 +105,76 @@ $$
 
 <p>实现了光照后，线框世界就变成了有色世界。</p>
 
-<p><img src="/img/cg/cubeDemo3.jpg" alt="cubeDemo3"></p>
+<p><img src="/img/cg/cubeDemo3.jpg" alt="cubeDemo3" /></p>
 
-<h2>3、排序</h2>
+<h2 id="3排序">3、排序</h2>
 
 <p>当存在多个物体时，渲染列表中的面未必是从远到进的，如果出现先绘制近的面，再绘制远的面，会出现图像撕裂。</p>
 
-<p><img src="/img/cg/cubeDemo4.jpg" alt="cubeDemo4"></p>
+<p><img src="/img/cg/cubeDemo4.jpg" alt="cubeDemo4" /></p>
 
 <p>此时需要对面进行深度排序，深度排序有多种方法，常用的有 zbuff 和 zsort，我的实现中使用了 zsort。</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="kr">inline</span> <span class="kt">int</span> <span class="nf">Compare_avgz</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">arg1</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">arg2</span><span class="p">)</span>
-<span class="lineno"> 2</span> <span class="p">{</span>
-<span class="lineno"> 3</span>     <span class="kt">float</span> <span class="n">z1</span><span class="p">,</span> <span class="n">z2</span><span class="p">;</span>
-<span class="lineno"> 4</span>     <span class="n">PPolyList4D</span> <span class="n">poly1</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="n">PPolyList4D</span><span class="o">*</span><span class="p">)</span><span class="n">arg1</span><span class="p">);</span>
-<span class="lineno"> 5</span>     <span class="n">PPolyList4D</span> <span class="n">poly2</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="n">PPolyList4D</span><span class="o">*</span><span class="p">)</span><span class="n">arg2</span><span class="p">);</span>
-<span class="lineno"> 6</span> 
-<span class="lineno"> 7</span>     <span class="n">z1</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="mf">0.333</span> <span class="o">*</span> <span class="p">(</span><span class="n">poly1</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">z</span> <span class="o">+</span> <span class="n">poly1</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">z</span> <span class="o">+</span> <span class="n">poly1</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">z</span><span class="p">);</span>
-<span class="lineno"> 8</span>     <span class="n">z2</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="mf">0.333</span> <span class="o">*</span> <span class="p">(</span><span class="n">poly2</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">z</span> <span class="o">+</span> <span class="n">poly2</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">z</span> <span class="o">+</span> <span class="n">poly2</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">z</span><span class="p">);</span>
-<span class="lineno"> 9</span> 
-<span class="lineno">10</span>     <span class="k">if</span> <span class="p">(</span><span class="n">z1</span> <span class="o">&gt;</span> <span class="n">z2</span><span class="p">)</span>
-<span class="lineno">11</span>         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-<span class="lineno">12</span>     <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">z1</span> <span class="o">&lt;</span> <span class="n">z2</span><span class="p">)</span>
-<span class="lineno">13</span>         <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
-<span class="lineno">14</span>     <span class="k">else</span>
-<span class="lineno">15</span>         <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="lineno">16</span> <span class="p">}</span>
-<span class="lineno">17</span> 
-<span class="lineno">18</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="n">RenderList4D</span><span class="o">::</span><span class="n">zsort</span><span class="p">()</span>
-<span class="lineno">19</span> <span class="p">{</span>
-<span class="lineno">20</span>     <span class="n">qsort</span><span class="p">(</span><span class="n">poly_ptrs</span><span class="p">,</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">num_polys</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">PPolyList4D</span><span class="p">),</span> <span class="n">Compare_avgz</span><span class="p">);</span>
-<span class="lineno">21</span> <span class="p">}</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21</pre></td><td class="code"><pre><span class="kr">inline</span> <span class="kt">int</span> <span class="nf">Compare_avgz</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">arg1</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">arg2</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">float</span> <span class="n">z1</span><span class="p">,</span> <span class="n">z2</span><span class="p">;</span>
+    <span class="n">PPolyList4D</span> <span class="n">poly1</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="n">PPolyList4D</span><span class="o">*</span><span class="p">)</span><span class="n">arg1</span><span class="p">);</span>
+    <span class="n">PPolyList4D</span> <span class="n">poly2</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="n">PPolyList4D</span><span class="o">*</span><span class="p">)</span><span class="n">arg2</span><span class="p">);</span>
 
-<p><img src="/img/cg/cubeDemo5.jpg" alt="cubeDemo5"></p>
+    <span class="n">z1</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="mf">0.333</span> <span class="o">*</span> <span class="p">(</span><span class="n">poly1</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">z</span> <span class="o">+</span> <span class="n">poly1</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">z</span> <span class="o">+</span> <span class="n">poly1</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">z</span><span class="p">);</span>
+    <span class="n">z2</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="mf">0.333</span> <span class="o">*</span> <span class="p">(</span><span class="n">poly2</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">z</span> <span class="o">+</span> <span class="n">poly2</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">z</span> <span class="o">+</span> <span class="n">poly2</span><span class="o">-&gt;</span><span class="n">tvlist</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">z</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">z1</span> <span class="o">&gt;</span> <span class="n">z2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">z1</span> <span class="o">&lt;</span> <span class="n">z2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">else</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="kt">void</span> <span class="n">RenderList4D</span><span class="o">::</span><span class="n">zsort</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">qsort</span><span class="p">(</span><span class="n">poly_ptrs</span><span class="p">,</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">num_polys</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">PPolyList4D</span><span class="p">),</span> <span class="n">Compare_avgz</span><span class="p">);</span>
+<span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<p><img src="/img/cg/cubeDemo5.jpg" alt="cubeDemo5" /></p>
 
 <p>经过了这些操作，3D 流水线的形态变更为：</p>
 
-<p><img src="/img/cg/pipeline4.jpg" alt="pipeline4"></p>
+<p><img src="/img/cg/pipeline4.jpg" alt="pipeline4" /></p>
 
 <p>这个软件渲染器还很初级，很多高级的特效也都没有做，这几篇文章算是一边回顾一边整理整理思路，为了下一个目标努力。</p>
 
 <p>待续。</p>
 
-<hr>
+<hr />
 
 <p>如果你发现我文章中的问题或希望与我交流，可以给我发邮件：<a href="mailto:plinux@qq.com">plinux@qq.com</a>。</p>
 
 <p>如果你读后有些许收获，也可以到我的 Github <a href="https://github.com/plinx">点赞支持</a>。</p>
 
-<p>&copy; 2015 plinx</p>
+<p>© 2015 plinx</p>
 
 </div>
 

@@ -27,151 +27,268 @@
 <p class="meta">01 Apr 2015</p>
 
 <div class="post">
-<h2>2、Constructors，Destructors，and Assignment Operators</h2>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 05 : Know what functions C++ silently writes and calls.
-</code></pre></div>
+<h2 id="2constructorsdestructorsand-assignment-operators">2、Constructors，Destructors，and Assignment Operators</h2>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Tip 05 : Know what functions C++ silently writes and calls.
+</code></pre>
+</div>
 <p>（1）在未声明任何构造函数时，编译器会为类合成默认构造函数（constructor）/析构函数（Destructor）/拷贝构造函数（copy constructor）/拷贝赋值操作符（operator=）；当类声明了含/不含实参的构造函数，编译器不会再为类合成默认构造函数/析构函数，但仍能合成默认拷贝构造函数/拷贝赋值构造函数。</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
-<span class="lineno"> 2</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
-<span class="lineno"> 3</span> <span class="nl">public:</span>
-<span class="lineno"> 4</span>     <span class="n">A</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">v</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">o</span><span class="p">)</span> <span class="o">:</span> <span class="n">value</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">obj</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="p">{}</span>
-<span class="lineno"> 5</span>     <span class="n">A</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">v</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">o</span><span class="p">)</span> <span class="o">:</span> <span class="n">value</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">obj</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="p">{}</span>
-<span class="lineno"> 6</span> 
-<span class="lineno"> 7</span>     <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">get_value</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">value</span><span class="p">;</span> <span class="p">}</span>
-<span class="lineno"> 8</span>     <span class="n">T</span> <span class="n">get_obj</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">obj</span><span class="p">;</span> <span class="p">}</span>
-<span class="lineno"> 9</span> 
-<span class="lineno">10</span> <span class="nl">private:</span>
-<span class="lineno">11</span>     <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">value</span><span class="p">;</span>
-<span class="lineno">12</span>     <span class="n">T</span> <span class="n">obj</span><span class="p">;</span>
-<span class="lineno">13</span> <span class="p">};</span>
-<span class="lineno">14</span> 
-<span class="lineno">15</span> <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-<span class="lineno">16</span> <span class="p">{</span>
-<span class="lineno">17</span>     <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a1</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-<span class="lineno">18</span>     <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a2</span><span class="p">(</span><span class="n">a1</span><span class="p">);</span>
-<span class="lineno">19</span>     <span class="c1">//A&lt;int&gt; a3; // Error : no default constructor exists for class A&lt;T&gt;</span>
-<span class="lineno">20</span>     <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a4</span> <span class="o">=</span> <span class="n">a1</span><span class="p">;</span>
-<span class="lineno">21</span>     <span class="n">a4</span> <span class="o">=</span> <span class="n">a2</span><span class="p">;</span>
-<span class="lineno">22</span> 
-<span class="lineno">23</span>     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="lineno">24</span> <span class="p">}</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24</pre></td><td class="code"><pre><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">A</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">v</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">o</span><span class="p">)</span> <span class="o">:</span> <span class="n">value</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">obj</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="p">{}</span>
+    <span class="n">A</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">v</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">o</span><span class="p">)</span> <span class="o">:</span> <span class="n">value</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">obj</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="p">{}</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">get_value</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">value</span><span class="p">;</span> <span class="p">}</span>
+    <span class="n">T</span> <span class="n">get_obj</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">obj</span><span class="p">;</span> <span class="p">}</span>
+
+<span class="k">private</span><span class="o">:</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">value</span><span class="p">;</span>
+    <span class="n">T</span> <span class="n">obj</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a1</span><span class="p">(</span><span class="s">"test"</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a2</span><span class="p">(</span><span class="n">a1</span><span class="p">);</span>
+    <span class="c1">//A&lt;int&gt; a3; // Error : no default constructor exists for class A&lt;T&gt;
+</span>    <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a4</span> <span class="o">=</span> <span class="n">a1</span><span class="p">;</span>
+    <span class="n">a4</span> <span class="o">=</span> <span class="n">a2</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
 
 <p>（2）当类中含有引用（reference）或常量（const）时，编译器无法合成拷贝赋值操作符；同样的，若在基类（base class）中声明拷贝赋值运算符为 private ，编译器将无法为派生类（derived class）合成拷贝赋值运算符号。</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
-<span class="lineno"> 2</span> <span class="nl">public:</span>
-<span class="lineno"> 3</span>     <span class="n">A</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">v</span><span class="p">)</span> <span class="o">:</span> <span class="n">value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="p">{}</span>
-<span class="lineno"> 4</span>     <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">get_value</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">value</span><span class="p">;</span> <span class="p">}</span>
-<span class="lineno"> 5</span> <span class="nl">private:</span>
-<span class="lineno"> 6</span>     <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">value</span><span class="p">;</span>
-<span class="lineno"> 7</span> <span class="p">};</span>
-<span class="lineno"> 8</span> <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
-<span class="lineno"> 9</span> <span class="k">class</span> <span class="nc">B</span> <span class="p">{</span>
-<span class="lineno">10</span> <span class="nl">public:</span>
-<span class="lineno">11</span>     <span class="n">B</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">o</span><span class="p">)</span> <span class="o">:</span> <span class="n">obj</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="p">{}</span>
-<span class="lineno">12</span>     <span class="n">T</span> <span class="n">get_obj</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">obj</span><span class="p">;</span> <span class="p">}</span>
-<span class="lineno">13</span> <span class="nl">private:</span>
-<span class="lineno">14</span>     <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">obj</span><span class="p">;</span>
-<span class="lineno">15</span> <span class="p">};</span>
-<span class="lineno">16</span> 
-<span class="lineno">17</span> <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-<span class="lineno">18</span> <span class="p">{</span>
-<span class="lineno">19</span>     <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">str</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">);</span>
-<span class="lineno">20</span>     <span class="n">A</span> <span class="n">a1</span><span class="p">(</span><span class="n">str</span><span class="p">);</span>
-<span class="lineno">21</span>     <span class="n">A</span> <span class="n">a2</span><span class="p">(</span><span class="n">a1</span><span class="p">);</span>
-<span class="lineno">22</span>     <span class="c1">//A a3; // Error : no default constructor exists for class A</span>
-<span class="lineno">23</span>     <span class="n">A</span> <span class="n">a4</span> <span class="o">=</span> <span class="n">a1</span><span class="p">;</span>
-<span class="lineno">24</span>     <span class="c1">//a4 = a2; // error C2582: &#39;operator =&#39; function is unavailable in &#39;A&#39;</span>
-<span class="lineno">25</span>     <span class="n">B</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">b1</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="lineno">26</span>     <span class="n">B</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">b2</span><span class="p">(</span><span class="n">b1</span><span class="p">);</span>
-<span class="lineno">27</span>     <span class="c1">//B&lt;int&gt; b3; // Error : no default constructor exists for class B&lt;T&gt;</span>
-<span class="lineno">28</span>     <span class="n">B</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">b4</span> <span class="o">=</span> <span class="n">b1</span><span class="p">;</span>
-<span class="lineno">29</span>     <span class="c1">//b4 = b2; // error C2582: &#39;operator =&#39; function is unavailable in &#39;B&lt;T&gt;&#39;</span>
-<span class="lineno">30</span> 
-<span class="lineno">31</span>     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="lineno">32</span> <span class="p">}</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">A</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">v</span><span class="p">)</span> <span class="o">:</span> <span class="n">value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="p">{}</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">get_value</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">value</span><span class="p">;</span> <span class="p">}</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">value</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">B</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">B</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">o</span><span class="p">)</span> <span class="o">:</span> <span class="n">obj</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="p">{}</span>
+    <span class="n">T</span> <span class="n">get_obj</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">obj</span><span class="p">;</span> <span class="p">}</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">obj</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">str</span><span class="p">(</span><span class="s">"test"</span><span class="p">);</span>
+    <span class="n">A</span> <span class="n">a1</span><span class="p">(</span><span class="n">str</span><span class="p">);</span>
+    <span class="n">A</span> <span class="n">a2</span><span class="p">(</span><span class="n">a1</span><span class="p">);</span>
+    <span class="c1">//A a3; // Error : no default constructor exists for class A
+</span>    <span class="n">A</span> <span class="n">a4</span> <span class="o">=</span> <span class="n">a1</span><span class="p">;</span>
+    <span class="c1">//a4 = a2; // error C2582: 'operator =' function is unavailable in 'A'
+</span>    <span class="n">B</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">b1</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="n">B</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">b2</span><span class="p">(</span><span class="n">b1</span><span class="p">);</span>
+    <span class="c1">//B&lt;int&gt; b3; // Error : no default constructor exists for class B&lt;T&gt;
+</span>    <span class="n">B</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">b4</span> <span class="o">=</span> <span class="n">b1</span><span class="p">;</span>
+    <span class="c1">//b4 = b2; // error C2582: 'operator =' function is unavailable in 'B&lt;T&gt;'
+</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
 
 <p>（3）当不使用引用或常量时，C++11 可以用 =default 来声明构造函数/析构函数/拷贝操作运算符，让编译器合成默认构造函数，区别于 Tip05-（1）。</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
-<span class="lineno"> 2</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
-<span class="lineno"> 3</span> <span class="nl">public:</span>
-<span class="lineno"> 4</span>     <span class="n">A</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
-<span class="lineno"> 5</span>     <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
-<span class="lineno"> 6</span> 
-<span class="lineno"> 7</span>     <span class="n">A</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">v</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">o</span><span class="p">)</span> <span class="o">:</span> <span class="n">value</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">obj</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="p">{}</span>
-<span class="lineno"> 8</span>     <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">get_value</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">value</span><span class="p">;</span> <span class="p">}</span>
-<span class="lineno"> 9</span> 
-<span class="lineno">10</span>     <span class="n">A</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
-<span class="lineno">11</span> <span class="nl">private:</span>
-<span class="lineno">12</span>     <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">value</span><span class="p">;</span>
-<span class="lineno">13</span>     <span class="n">T</span> <span class="n">obj</span><span class="p">;</span>
-<span class="lineno">14</span> <span class="p">};</span>
-<span class="lineno">15</span> 
-<span class="lineno">16</span> <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-<span class="lineno">17</span> <span class="p">{</span>
-<span class="lineno">18</span>     <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">str</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">);</span>
-<span class="lineno">19</span>     <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a1</span><span class="p">(</span><span class="n">str</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-<span class="lineno">20</span>     <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a2</span><span class="p">(</span><span class="n">a1</span><span class="p">);</span>
-<span class="lineno">21</span>     <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a3</span><span class="p">;</span>
-<span class="lineno">22</span>     <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a4</span> <span class="o">=</span> <span class="n">a1</span><span class="p">;</span>
-<span class="lineno">23</span>     <span class="n">a4</span> <span class="o">=</span> <span class="n">a2</span><span class="p">;</span> 
-<span class="lineno">24</span> 
-<span class="lineno">25</span>     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="lineno">26</span> <span class="p">}</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26</pre></td><td class="code"><pre><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">A</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+    <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+    <span class="n">A</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">v</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span> <span class="n">o</span><span class="p">)</span> <span class="o">:</span> <span class="n">value</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">obj</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="p">{}</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">get_value</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">value</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="n">A</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">value</span><span class="p">;</span>
+    <span class="n">T</span> <span class="n">obj</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">str</span><span class="p">(</span><span class="s">"test"</span><span class="p">);</span>
+    <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a1</span><span class="p">(</span><span class="n">str</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a2</span><span class="p">(</span><span class="n">a1</span><span class="p">);</span>
+    <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a3</span><span class="p">;</span>
+    <span class="n">A</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a4</span> <span class="o">=</span> <span class="n">a1</span><span class="p">;</span>
+    <span class="n">a4</span> <span class="o">=</span> <span class="n">a2</span><span class="p">;</span> 
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
 
 <p><strong>关于 =default 的更多内容请查看 《 C++ Primer 5th 》 13.1.5。</strong></p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 06 : Explicitly disallow the use of compiler-generated functions you do not want.
-</code></pre></div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Tip 06 : Explicitly disallow the use of compiler-generated functions you do not want.
+</code></pre>
+</div>
 <p>（1）如果想禁止拷贝构造函数/拷贝赋值运算符，可以将其声明在 private 中，这样的类可以限制数据拷贝，保持数据唯一性；若想在每个类中都使用这样的限制，可以将基类设计成无参数基类，每一类对该基类可以通过继承实现禁止。</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
-<span class="lineno"> 2</span> <span class="nl">public:</span>
-<span class="lineno"> 3</span>     <span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
-<span class="lineno"> 4</span>     <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
-<span class="lineno"> 5</span> <span class="nl">private:</span>
-<span class="lineno"> 6</span>     <span class="n">A</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span><span class="p">);</span>
-<span class="lineno"> 7</span>     <span class="n">A</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span><span class="p">);</span>
-<span class="lineno"> 8</span> <span class="p">};</span>
-<span class="lineno"> 9</span> 
-<span class="lineno">10</span> <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-<span class="lineno">11</span> <span class="p">{</span>
-<span class="lineno">12</span>     <span class="n">A</span> <span class="n">a1</span><span class="p">;</span>
-<span class="lineno">13</span>     <span class="c1">//A a2(a1); // A::A(const A&amp;) is inaccessible</span>
-<span class="lineno">14</span>     <span class="c1">//A a3 = a1; // A::A(const A&amp;) is inaccessible</span>
-<span class="lineno">15</span>     <span class="c1">//A a4;</span>
-<span class="lineno">16</span>     <span class="c1">//a4 = a1; // A&amp; A::operator=(const A&amp;) is inaccessible </span>
-<span class="lineno">17</span> 
-<span class="lineno">18</span>     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="lineno">19</span> <span class="p">}</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
+    <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="n">A</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span><span class="p">);</span>
+    <span class="n">A</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">A</span> <span class="n">a1</span><span class="p">;</span>
+    <span class="c1">//A a2(a1); // A::A(const A&amp;) is inaccessible
+</span>    <span class="c1">//A a3 = a1; // A::A(const A&amp;) is inaccessible
+</span>    <span class="c1">//A a4;
+</span>    <span class="c1">//a4 = a1; // A&amp; A::operator=(const A&amp;) is inaccessible 
+</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
 
 <p>（2）C++11 可以用 =delete 实现禁止（删除），详细介绍参考 《 C++ Primer 5th 》 13.1.6。</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
-<span class="lineno"> 2</span> <span class="nl">public:</span>
-<span class="lineno"> 3</span>     <span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
-<span class="lineno"> 4</span>     <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
-<span class="lineno"> 5</span>     <span class="n">A</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
-<span class="lineno"> 6</span>     <span class="n">A</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
-<span class="lineno"> 7</span> <span class="p">};</span>
-<span class="lineno"> 8</span> 
-<span class="lineno"> 9</span> <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-<span class="lineno">10</span> <span class="p">{</span>
-<span class="lineno">11</span>     <span class="n">A</span> <span class="n">a1</span><span class="p">;</span>
-<span class="lineno">12</span>     <span class="c1">//A a2(a1); // A::A(const A&amp;) cannot be referenced </span>
-<span class="lineno">13</span>     <span class="c1">//A a3 = a1; // A::A(const A&amp;) cannot be referenced</span>
-<span class="lineno">14</span>     <span class="c1">//A a4;</span>
-<span class="lineno">15</span>     <span class="c1">//a4 = a1; // A&amp; A::operator=(const A&amp;) cannot be referenced</span>
-<span class="lineno">16</span>     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="lineno">17</span> <span class="p">}</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
+    <span class="o">~</span><span class="n">A</span><span class="p">()</span> <span class="p">{}</span>
+    <span class="n">A</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+    <span class="n">A</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+<span class="p">};</span>
 
-<p>&copy; 2015 plinx</p>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">A</span> <span class="n">a1</span><span class="p">;</span>
+    <span class="c1">//A a2(a1); // A::A(const A&amp;) cannot be referenced 
+</span>    <span class="c1">//A a3 = a1; // A::A(const A&amp;) cannot be referenced
+</span>    <span class="c1">//A a4;
+</span>    <span class="c1">//a4 = a1; // A&amp; A::operator=(const A&amp;) cannot be referenced
+</span>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<p>© 2015 plinx</p>
 
 </div>
 

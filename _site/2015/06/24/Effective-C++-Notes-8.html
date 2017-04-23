@@ -27,109 +27,183 @@
 <p class="meta">24 Jun 2015</p>
 
 <div class="post">
-<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 35 : Consider alternatives to virtual functions.
-</code></pre></div>
+<div class="highlighter-rouge"><pre class="highlight"><code>Tip 35 : Consider alternatives to virtual functions.
+</code></pre>
+</div>
+
 <p>NVI（Non-Virtual Interface）实现 Template Method 模式。</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="k">class</span> <span class="nc">Painter</span> <span class="p">{</span>
-<span class="lineno">2</span> <span class="nl">public:</span>
-<span class="lineno">3</span>     <span class="kt">void</span> <span class="n">draw</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="n">doDraw</span><span class="p">();</span> <span class="p">}</span>     <span class="c1">// wrapper</span>
-<span class="lineno">4</span> <span class="nl">private:</span>
-<span class="lineno">5</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">doDraw</span><span class="p">()</span> <span class="k">const</span> <span class="p">{}</span>
-<span class="lineno">6</span> <span class="p">};</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Painter</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="kt">void</span> <span class="n">draw</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="n">doDraw</span><span class="p">();</span> <span class="p">}</span>     <span class="c1">// wrapper
+</span><span class="nl">private:</span>
+    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">doDraw</span><span class="p">()</span> <span class="k">const</span> <span class="p">{}</span>
+<span class="p">};</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
 
 <p>NVI 允许派生类重新实现虚函数，但调用虚函数需要权限，若兄弟派生类想要调用 draw，则需要声明为
 protected.</p>
 
 <p>// pass Strategy 模式</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 36 : Nerver redefine an inherited non-virtual function.
-</code></pre></div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Tip 36 : Nerver redefine an inherited non-virtual function.
+</code></pre>
+</div>
+
 <p>non-virtual 函数是静态绑定的，所以基类指针和派生类指针会产生不同的结果。</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
-<span class="lineno"> 2</span> <span class="nl">public:</span>
-<span class="lineno"> 3</span>     <span class="kt">void</span> <span class="n">func1</span><span class="p">();</span>
-<span class="lineno"> 4</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="nf">func2</span><span class="p">();</span> 
-<span class="lineno"> 5</span> <span class="p">};</span>
-<span class="lineno"> 6</span> <span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span> <span class="p">{</span>
-<span class="lineno"> 7</span> <span class="nl">public:</span>
-<span class="lineno"> 8</span>     <span class="kt">void</span> <span class="n">func1</span><span class="p">();</span>
-<span class="lineno"> 9</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="nf">func2</span><span class="p">();</span>
-<span class="lineno">10</span> <span class="p">};</span>
-<span class="lineno">11</span> 
-<span class="lineno">12</span> <span class="n">Derived</span> <span class="n">d</span><span class="p">;</span>
-<span class="lineno">13</span> <span class="n">Base</span> <span class="o">*</span><span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
-<span class="lineno">14</span> <span class="n">Derived</span> <span class="o">*</span><span class="n">pd</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
-<span class="lineno">15</span> 
-<span class="lineno">16</span> <span class="n">pb</span><span class="o">-&gt;</span><span class="n">func1</span><span class="p">();</span>    <span class="c1">// call Base::func1()</span>
-<span class="lineno">17</span> <span class="n">pd</span><span class="o">-&gt;</span><span class="n">func1</span><span class="p">();</span>    <span class="c1">// call Derived::func1()</span>
-<span class="lineno">18</span> 
-<span class="lineno">19</span> <span class="n">pb</span><span class="o">-&gt;</span><span class="n">func2</span><span class="p">();</span>    <span class="c1">// call Derived::func2()</span>
-<span class="lineno">20</span> <span class="n">pd</span><span class="o">-&gt;</span><span class="n">func2</span><span class="p">();</span>    <span class="c1">// call Derived::func2() </span>
-</code></pre></div>
- 
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="kt">void</span> <span class="n">func1</span><span class="p">();</span>
+    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">func2</span><span class="p">();</span> 
+<span class="p">};</span>
+<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="kt">void</span> <span class="n">func1</span><span class="p">();</span>
+    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">func2</span><span class="p">();</span>
+<span class="p">};</span>
+
+<span class="n">Derived</span> <span class="n">d</span><span class="p">;</span>
+<span class="n">Base</span> <span class="o">*</span><span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
+<span class="n">Derived</span> <span class="o">*</span><span class="n">pd</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
+
+<span class="n">pb</span><span class="o">-&gt;</span><span class="n">func1</span><span class="p">();</span>    <span class="c1">// call Base::func1()
+</span><span class="n">pd</span><span class="o">-&gt;</span><span class="n">func1</span><span class="p">();</span>    <span class="c1">// call Derived::func1()
+</span>
+<span class="n">pb</span><span class="o">-&gt;</span><span class="n">func2</span><span class="p">();</span>    <span class="c1">// call Derived::func2()
+</span><span class="n">pd</span><span class="o">-&gt;</span><span class="n">func2</span><span class="p">();</span>    <span class="o">//</span> <span class="n">call</span> <span class="n">Derived</span><span class="o">::</span><span class="n">func2</span><span class="p">()</span> <span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
 
 <p>所以，任何情况下，不该重新定义一个继承而来的 non-virtual。解决该问题的方法参考 Tip 34。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 37 : Never redefine a function&#39;s inherited default parameter value.
-</code></pre></div>
-<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
-<span class="lineno"> 2</span> <span class="nl">public:</span>
-<span class="lineno"> 3</span>     <span class="k">enum</span> <span class="n">Order</span> <span class="p">{</span> <span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="p">,</span> <span class="n">three</span> <span class="p">};</span>
-<span class="lineno"> 4</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span> <span class="n">order</span> <span class="o">=</span> <span class="n">one</span><span class="p">)</span> <span class="k">const</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-<span class="lineno"> 5</span> <span class="p">};</span>
-<span class="lineno"> 6</span> <span class="k">class</span> <span class="nc">D1</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span> <span class="p">{</span>
-<span class="lineno"> 7</span> <span class="nl">public:</span>
-<span class="lineno"> 8</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span> <span class="n">order</span> <span class="o">=</span> <span class="n">two</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>     <span class="c1">// default change</span>
-<span class="lineno"> 9</span> <span class="p">};</span>
-<span class="lineno">10</span> <span class="k">class</span> <span class="nc">D2</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span> <span class="p">{</span>
-<span class="lineno">11</span> <span class="nl">public:</span>
-<span class="lineno">12</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span> <span class="n">order</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>           <span class="c1">// no default</span>
-<span class="lineno">13</span> <span class="p">};</span>
-<span class="lineno">14</span> 
-<span class="lineno">15</span> <span class="n">Base</span> <span class="o">*</span><span class="n">pb</span><span class="p">;</span>
-<span class="lineno">16</span> <span class="n">D1</span> <span class="n">d1</span><span class="p">;</span>
-<span class="lineno">17</span> <span class="n">D2</span> <span class="n">d2</span><span class="p">;</span>
-<span class="lineno">18</span> <span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d1</span><span class="p">;</span>
-<span class="lineno">19</span> <span class="n">pb</span><span class="o">-&gt;</span><span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span><span class="o">::</span><span class="n">three</span><span class="p">);</span>     <span class="c1">// D1::getOrder(Order::three)</span>
-<span class="lineno">20</span> <span class="n">pb</span><span class="o">-&gt;</span><span class="n">getOrder</span><span class="p">();</span>                 <span class="c1">// D1::getOrder(Order::two)     !!</span>
-<span class="lineno">21</span> 
-<span class="lineno">22</span> <span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d2</span><span class="p">;</span>       
-<span class="lineno">23</span> <span class="n">pb</span><span class="o">-&gt;</span><span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span><span class="o">::</span><span class="n">three</span><span class="p">);</span>     <span class="c1">// D2::getOrder(Order::three)</span>
-<span class="lineno">24</span> <span class="n">pb</span><span class="o">-&gt;</span><span class="n">getOrder</span><span class="p">();</span>                 <span class="c1">// it depends on compiler.      !!</span>
-</code></pre></div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Tip 37 : Never redefine a function's inherited default parameter value.
+</code></pre>
+</div>
+
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="k">enum</span> <span class="n">Order</span> <span class="p">{</span> <span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="p">,</span> <span class="n">three</span> <span class="p">};</span>
+    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span> <span class="n">order</span> <span class="o">=</span> <span class="n">one</span><span class="p">)</span> <span class="k">const</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="k">class</span> <span class="nc">D1</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span> <span class="n">order</span> <span class="o">=</span> <span class="n">two</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>     <span class="c1">// default change
+</span><span class="p">};</span>
+<span class="k">class</span> <span class="nc">D2</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span> <span class="n">order</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>           <span class="c1">// no default
+</span><span class="p">};</span>
+
+<span class="n">Base</span> <span class="o">*</span><span class="n">pb</span><span class="p">;</span>
+<span class="n">D1</span> <span class="n">d1</span><span class="p">;</span>
+<span class="n">D2</span> <span class="n">d2</span><span class="p">;</span>
+<span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d1</span><span class="p">;</span>
+<span class="n">pb</span><span class="o">-&gt;</span><span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span><span class="o">::</span><span class="n">three</span><span class="p">);</span>     <span class="c1">// D1::getOrder(Order::three)
+</span><span class="n">pb</span><span class="o">-&gt;</span><span class="n">getOrder</span><span class="p">();</span>                 <span class="c1">// D1::getOrder(Order::two)     !!
+</span>
+<span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d2</span><span class="p">;</span>       
+<span class="n">pb</span><span class="o">-&gt;</span><span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span><span class="o">::</span><span class="n">three</span><span class="p">);</span>     <span class="c1">// D2::getOrder(Order::three)
+</span><span class="n">pb</span><span class="o">-&gt;</span><span class="n">getOrder</span><span class="p">();</span>                 <span class="o">//</span> <span class="n">it</span> <span class="n">depends</span> <span class="n">on</span> <span class="n">compiler</span><span class="p">.</span>      <span class="o">!!</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
 
 <p>要避免这个问题，可以使用 Tip 35 的 NVI 方法。</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
-<span class="lineno"> 2</span> <span class="nl">public:</span>
-<span class="lineno"> 3</span>     <span class="k">enum</span> <span class="n">Order</span> <span class="p">{</span> <span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="p">,</span> <span class="n">three</span> <span class="p">};</span>
-<span class="lineno"> 4</span>     <span class="kt">void</span> <span class="nf">retOrder</span><span class="p">(</span><span class="n">Order</span> <span class="n">order</span> <span class="o">=</span> <span class="n">one</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">order</span><span class="p">);</span> <span class="p">}</span>
-<span class="lineno"> 5</span> <span class="nl">private:</span>
-<span class="lineno"> 6</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span> <span class="n">order</span><span class="p">)</span> <span class="k">const</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-<span class="lineno"> 7</span> <span class="p">};</span>
-<span class="lineno"> 8</span> 
-<span class="lineno"> 9</span> <span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span> <span class="p">{</span>
-<span class="lineno">10</span> <span class="nl">private:</span>
-<span class="lineno">11</span>     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">Oreder</span> <span class="n">order</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>
-<span class="lineno">12</span> <span class="p">};</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Base</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="k">enum</span> <span class="n">Order</span> <span class="p">{</span> <span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="p">,</span> <span class="n">three</span> <span class="p">};</span>
+    <span class="kt">void</span> <span class="n">retOrder</span><span class="p">(</span><span class="n">Order</span> <span class="n">order</span> <span class="o">=</span> <span class="n">one</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">order</span><span class="p">);</span> <span class="p">}</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">Order</span> <span class="n">order</span><span class="p">)</span> <span class="k">const</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span> <span class="p">{</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">getOrder</span><span class="p">(</span><span class="n">Oreder</span> <span class="n">order</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+<span class="p">};</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
 
 <p>在 VS2013 community 中，编译器将派生类中的默认参数都使用基类的默认参数。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 38 : Model &quot;has-a&quot; or&quot;is-implemented-in-terms-of&quot; through composition.
-</code></pre></div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Tip 38 : Model "has-a" or"is-implemented-in-terms-of" through composition.
+</code></pre>
+</div>
+
 <p>复合（composition）的意义和 public 继承完全不同。</p>
 
-<p>在应用域（application domain），复合意味着“有一个”（&quot;has-a&quot;）。
+<p>在应用域（application domain），复合意味着“有一个”（”has-a”）。
 在实现域（implementation domain），复合意味着“根据某物实现”（is-implemented-in-terms-of）。</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 39 : Use private inheritance judiciously.
-</code></pre></div>
-<p>// pass</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">Tip 40 : Use multiple inheritance judiciously.
-</code></pre></div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Tip 39 : Use private inheritance judiciously.
+</code></pre>
+</div>
+
 <p>// pass</p>
 
-<p>&copy; 2015 plinx</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>Tip 40 : Use multiple inheritance judiciously.
+</code></pre>
+</div>
+
+<p>// pass</p>
+
+<p>© 2015 plinx</p>
 
 </div>
 

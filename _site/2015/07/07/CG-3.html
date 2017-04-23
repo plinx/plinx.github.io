@@ -27,23 +27,23 @@
 <p class="meta">07 Jul 2015</p>
 
 <div class="post">
-<h2>0、概述</h2>
+<h2 id="0概述">0、概述</h2>
 
 <p>数学库是软件渲染器的核心部分之一，没有数学库的支持，甚至无法完成基本的 3D 物体坐标转换与显示。</p>
 
 <p>数学库由多个文件构成：</p>
 
 <ul>
-<li>Vector.h：点、向量的支持</li>
-<li>LMath.h：线、面和三角函数表支持</li>
-<li>LMath.cpp：...</li>
-<li>Matrix.h：矩阵支持</li>
-<li>Quat.h：四元数支持</li>
+  <li>Vector.h：点、向量的支持</li>
+  <li>LMath.h：线、面和三角函数表支持</li>
+  <li>LMath.cpp：…</li>
+  <li>Matrix.h：矩阵支持</li>
+  <li>Quat.h：四元数支持</li>
 </ul>
 
 <p>点、线、面相关介绍在上一节已基本涵盖，本节主要介绍矩阵和四元数的库支持。数学库需要编写大量容易出错的代码，从点线面到矩阵运算，前一步产生的错误很可能在后一步累加放大成更大的错误，所以需要有尽可能完备的测试去保证数学库的正确性。</p>
 
-<h2>1、矩阵</h2>
+<h2 id="1矩阵">1、矩阵</h2>
 
 <p>矩阵常用于数据变换，如平移、缩放、旋转等。在设计实现矩阵是，我既使用了重载运算符，也使用了成员运算函数。重载运算符只限于对同一类型的数据结构使用，而成员运算函数则重载了多个版本对应于不同的数据结构。以下的运算中，均以 Matrix4x4 矩阵为例。</p>
 
@@ -52,14 +52,14 @@
 <p>
 $$
 p' = p * M_t \\
-= \begin{bmatrix}x & y & z & 1\end{bmatrix} *
+= \begin{bmatrix}x &amp; y &amp; z &amp; 1\end{bmatrix} *
 \begin{bmatrix}
-1 & 0 & 0 & 0 \\
-0 & 1 & 0 & 0 \\
-0 & 0 & 1 & 0 \\
-\Delta_x & \Delta_y & \Delta_z & 1 
+1 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 1 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 1 &amp; 0 \\
+\Delta_x &amp; \Delta_y &amp; \Delta_z &amp; 1 
 \end{bmatrix} \\
-= \begin{bmatrix}x + \Delta_x & y + \Delta_y & z + \Delta_z & 1\end{bmatrix}
+= \begin{bmatrix}x + \Delta_x &amp; y + \Delta_y &amp; z + \Delta_z &amp; 1\end{bmatrix}
 $$
 </p>
 
@@ -68,14 +68,14 @@ $$
 <p>
 $$
 p' = p * M_s \\
-= \begin{bmatrix}x & y & z & 1\end{bmatrix} *
+= \begin{bmatrix}x &amp; y &amp; z &amp; 1\end{bmatrix} *
 \begin{bmatrix}
-sx & 0 & 0 & 0 \\
-0 & sy & 0 & 0 \\
-0 & 0 & sz & 0 \\
-0 & 0 & 0 & 1 
+sx &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; sy &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; sz &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 1 
 \end{bmatrix} \\
-= \begin{bmatrix}sx*x & sy*y & sz*z & 1\end{bmatrix}
+= \begin{bmatrix}sx*x &amp; sy*y &amp; sz*z &amp; 1\end{bmatrix}
 $$
 </p>
 
@@ -86,47 +86,54 @@ $$
 <p>
 $$
 p' = p * M_z \\
-= \begin{bmatrix}x & y & z & 1\end{bmatrix} *
+= \begin{bmatrix}x &amp; y &amp; z &amp; 1\end{bmatrix} *
 \begin{bmatrix}
-\cos(\theta) & \sin(\theta) & 0 & 0 \\
--\sin(\theta) & \cos(\theta) & 0 & 0 \\
-0 & 0 & 1 & 0 \\
-0 & 0 & 0 & 1
+\cos(\theta) &amp; \sin(\theta) &amp; 0 &amp; 0 \\
+-\sin(\theta) &amp; \cos(\theta) &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 1 &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 1
 \end{bmatrix} \\
 = \begin{bmatrix}
-x*\cos(\theta) - y*\sin(\theta) & x*\sin(\theta) + y*\cos(\theta) & z & 1
+x*\cos(\theta) - y*\sin(\theta) &amp; x*\sin(\theta) + y*\cos(\theta) &amp; z &amp; 1
 \end{bmatrix}
 $$
 </p>
 
-<h2>2、四元数</h2>
+<h2 id="2四元数">2、四元数</h2>
 
 <p>pass</p>
 
-<h2>3、测试</h2>
+<h2 id="3测试">3、测试</h2>
 
 <p>测试是系统功能性的保证，设计完备的测试并不比实现功能简单，测试的目标不仅仅是覆盖 API，更多地是尽可能提供实际场景中的数据与环境，及早地发现每个部分元功能的错误。</p>
 
 <p>实现测试时，我并没有使用 assert.h 中的 assert，而是自己定义了一个函数 UT_ASSERT，在检测条件的同时，将错误信息打印并写入文件。C++ 中的 assert 功能比较单一，仅具有比较功能，相对来说 Python 中的 unittest 就很好用。如果要在 C++ assert 中实现更详细的信息反馈，还是需要自己实现或者使用一些单元测试框架，例如 gtest。
 （在学习制作这一部分时，我阅读了《Effective C++》的部分章节，导致前后编码风格发生了一定的变化。）</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno">1</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">UT_ASSERT</span><span class="p">(</span><span class="kt">bool</span> <span class="n">condition</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">output</span><span class="p">)</span>
-<span class="lineno">2</span> <span class="p">{</span>
-<span class="lineno">3</span>     <span class="k">if</span> <span class="p">(</span><span class="n">condition</span><span class="p">)</span>
-<span class="lineno">4</span>     <span class="p">{</span>
-<span class="lineno">5</span>         <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">output</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-<span class="lineno">6</span>         <span class="n">TestLog</span> <span class="o">&lt;&lt;</span> <span class="n">output</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-<span class="lineno">7</span>     <span class="p">}</span>
-<span class="lineno">8</span> <span class="p">}</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8</pre></td><td class="code"><pre><span class="kr">inline</span> <span class="kt">void</span> <span class="nf">UT_ASSERT</span><span class="p">(</span><span class="kt">bool</span> <span class="n">condition</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">output</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">output</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">TestLog</span> <span class="o">&lt;&lt;</span> <span class="n">output</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
 
-<hr>
+<hr />
 
 <p>如果你发现我文章中的问题或希望与我交流，可以给我发邮件：<a href="mailto:plinux@qq.com">plinux@qq.com</a>。</p>
 
 <p>如果你读后有些许收获，也可以到我的 Github <a href="https://github.com/plinx">点赞支持</a>。</p>
 
-<p>&copy; 2015 plinx</p>
+<p>© 2015 plinx</p>
 
 </div>
 

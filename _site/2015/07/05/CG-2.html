@@ -27,14 +27,14 @@
 <p class="meta">05 Jul 2015</p>
 
 <div class="post">
-<h2>0、概述</h2>
+<h2 id="0概述">0、概述</h2>
 
 <p>在 2D/3D 空间中的点、线、面都具有其通用含义：</p>
 
 <ul>
-<li>点（Point）：一个坐标（x, y）或（x, y, z）</li>
-<li>线（Line）：线段的两个端点，线段长度</li>
-<li>面（Plane）：面上的一个点，面的法向量</li>
+  <li>点（Point）：一个坐标（x, y）或（x, y, z）</li>
+  <li>线（Line）：线段的两个端点，线段长度</li>
+  <li>面（Plane）：面上的一个点，面的法向量</li>
 </ul>
 
 <p>在 3D 图形编程中，“向量”也是一个极其重要的数据结构，用于表示一条有向线段，由不同方向的分量组成。</p>
@@ -45,67 +45,76 @@
 
 <p>点与向量的实现在 <a href="https://github.com/plinx/CG/blob/master/Raterization/Raterization/inc/Vector.h">Vector.h</a> 中，线和面的实现在 <a href="https://github.com/plinx/CG/blob/master/Raterization/Raterization/inc/LMath.h">LMath.h</a> 中。</p>
 
-<h2>1、点</h2>
+<h2 id="1点">1、点</h2>
 
 <p>此处说的点就是向量的意思，几乎所有的计算都是对向量有意义的，对于点只有 +、-、* 有意义，所以说我的实现中为了节省这几行代码带来的二义性是不值得的，将在下一重构时修复这个问题。</p>
 
 <p>
 $$
 \begin{array} {rl}
-Operator & API \\
+Operator &amp; API \\
 \hline 
-|\vec{u}| & \vec{u}.length() \\
--\vec{u} & \vec{u}.reverse() \\
-\frac{\vec{u}}{|\vec{u}|} & \vec{u}.normalize() \\
-\vec{u}\bullet\vec{v} & \vec{u}.dot(\vec{v}) \\
-\frac{\vec{u}\bullet\vec{v}}{|\vec{u}|*|\vec{v}|} &
+|\vec{u}| &amp; \vec{u}.length() \\
+-\vec{u} &amp; \vec{u}.reverse() \\
+\frac{\vec{u}}{|\vec{u}|} &amp; \vec{u}.normalize() \\
+\vec{u}\bullet\vec{v} &amp; \vec{u}.dot(\vec{v}) \\
+\frac{\vec{u}\bullet\vec{v}}{|\vec{u}|*|\vec{v}|} &amp;
 \vec{u}.cos(\vec{v}) \\
-\vec{u}+\vec{v} & \begin{cases}
+\vec{u}+\vec{v} &amp; \begin{cases}
     \vec{u}.operator+(\vec{v}) \\
     \vec{u}.operator+=(\vec{v})
 \end{cases} \\
-\vec{u}-\vec{v} & \begin{cases}
+\vec{u}-\vec{v} &amp; \begin{cases}
     \vec{u}.operator-(\vec{v}) \\
     \vec{u}.operator-=(\vec{v})
 \end{cases} \\
-\vec{u}*\vec{v} & \begin{cases}
+\vec{u}*\vec{v} &amp; \begin{cases}
     \vec{u}.operator*(\vec{v}) \\
     \vec{u}.operator*=(\vec{v})
 \end{cases} \\
-\vec{u}\times\vec{v} & \vec{u}.cross(\vec{v}) \\
+\vec{u}\times\vec{v} &amp; \vec{u}.cross(\vec{v}) \\
 \end{array}
 $$
 </p>
 
 <p>此处对用 operator 运算符做了两种处理：产生临时变量返回、改变本身属性。</p>
 
-<p>做这两种区分主要出于以下考虑：1）直接运算时，往往并不希望改变变量本身的参数，而仅仅是希望获得返回值；2）当执行运算赋值时，则确定将会改变变量本身的参数，所以在不产生错误的情况下可以修改原始参数。 </p>
+<p>做这两种区分主要出于以下考虑：1）直接运算时，往往并不希望改变变量本身的参数，而仅仅是希望获得返回值；2）当执行运算赋值时，则确定将会改变变量本身的参数，所以在不产生错误的情况下可以修改原始参数。</p>
 
-<div class="highlight"><pre><code class="c++"><span class="lineno"> 1</span> <span class="kr">inline</span> <span class="n">Vector3D</span> <span class="n">Vector3D</span><span class="o">::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">const</span> <span class="n">Vector3D</span><span class="o">&amp;</span> <span class="n">v</span><span class="p">)</span>
-<span class="lineno"> 2</span> <span class="p">{</span>
-<span class="lineno"> 3</span>     <span class="n">Vector3D</span> <span class="n">tmp</span><span class="p">;</span>
-<span class="lineno"> 4</span>     <span class="n">tmp</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">v</span><span class="p">.</span><span class="n">x</span><span class="p">;</span> <span class="n">tmp</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">v</span><span class="p">.</span><span class="n">y</span><span class="p">;</span> <span class="n">tmp</span><span class="p">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">z</span> <span class="o">+</span> <span class="n">v</span><span class="p">.</span><span class="n">z</span><span class="p">;</span>
-<span class="lineno"> 5</span>     <span class="k">return</span> <span class="n">tmp</span><span class="p">;</span>
-<span class="lineno"> 6</span> <span class="p">}</span>
-<span class="lineno"> 7</span> 
-<span class="lineno"> 8</span> <span class="kr">inline</span> <span class="n">Vector3D</span><span class="o">&amp;</span> <span class="n">Vector3D</span><span class="o">::</span><span class="k">operator</span><span class="o">+=</span><span class="p">(</span><span class="k">const</span> <span class="n">Vector3D</span><span class="o">&amp;</span> <span class="n">v</span><span class="p">)</span> 
-<span class="lineno"> 9</span> <span class="p">{</span> 
-<span class="lineno">10</span>     <span class="n">x</span> <span class="o">+=</span> <span class="n">v</span><span class="p">.</span><span class="n">x</span><span class="p">;</span> <span class="n">y</span> <span class="o">+=</span> <span class="n">v</span><span class="p">.</span><span class="n">y</span><span class="p">;</span> <span class="n">z</span> <span class="o">+=</span> <span class="n">v</span><span class="p">.</span><span class="n">z</span><span class="p">;</span> 
-<span class="lineno">11</span>     <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span> 
-<span class="lineno">12</span> <span class="p">}</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-c--" data-lang="c++"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12</pre></td><td class="code"><pre><span class="kr">inline</span> <span class="n">Vector3D</span> <span class="n">Vector3D</span><span class="o">::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">const</span> <span class="n">Vector3D</span><span class="o">&amp;</span> <span class="n">v</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">Vector3D</span> <span class="n">tmp</span><span class="p">;</span>
+    <span class="n">tmp</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">v</span><span class="p">.</span><span class="n">x</span><span class="p">;</span> <span class="n">tmp</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">v</span><span class="p">.</span><span class="n">y</span><span class="p">;</span> <span class="n">tmp</span><span class="p">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">z</span> <span class="o">+</span> <span class="n">v</span><span class="p">.</span><span class="n">z</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">tmp</span><span class="p">;</span>
+<span class="p">}</span>
 
-<h2>2、线</h2>
+<span class="kr">inline</span> <span class="n">Vector3D</span><span class="o">&amp;</span> <span class="n">Vector3D</span><span class="o">::</span><span class="k">operator</span><span class="o">+=</span><span class="p">(</span><span class="k">const</span> <span class="n">Vector3D</span><span class="o">&amp;</span> <span class="n">v</span><span class="p">)</span> 
+<span class="p">{</span> 
+    <span class="n">x</span> <span class="o">+=</span> <span class="n">v</span><span class="p">.</span><span class="n">x</span><span class="p">;</span> <span class="n">y</span> <span class="o">+=</span> <span class="n">v</span><span class="p">.</span><span class="n">y</span><span class="p">;</span> <span class="n">z</span> <span class="o">+=</span> <span class="n">v</span><span class="p">.</span><span class="n">z</span><span class="p">;</span> 
+    <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span> 
+<span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
 
+<h2 id="2线">2、线</h2>
 <p>线由起点坐标、终点坐标和由起点指向终点的向量组成，无需赘述。</p>
 
-<h2>3、面</h2>
-
+<h2 id="3面">3、面</h2>
 <p>3D 空间中的坐标系有两种基本的组织方式：柱面坐标系和球面坐标系。综合运用这两种坐标系，可以有效简化坐标计算。</p>
 
 <p>1）空间中的一个平面由平面上的一个点和平面法向量表示。</p>
 
-<p><img src="/img/cg/plane.jpg" alt="plane"></p>
+<p><img src="/img/cg/plane.jpg" alt="plane" /></p>
 
 <p>2）柱面坐标系</p>
 
@@ -114,7 +123,7 @@ $$
 <p>
 $$
 \begin{array} {}
-P(\rho, \theta, z) &
+P(\rho, \theta, z) &amp;
 \begin{cases}
 x = r * \cos(\theta) \\
 y = r * \sin(\theta) \\
@@ -124,7 +133,7 @@ z = z
 $$
 </p>
 
-<p><img src="/img/cg/spherical.jpg" alt="spherical"></p>
+<p><img src="/img/cg/spherical.jpg" alt="spherical" /></p>
 
 <p>3）球面坐标系</p>
 
@@ -133,7 +142,7 @@ $$
 <p>
 $$
 \begin{array} {}
-P(\rho, \phi, \theta) &
+P(\rho, \phi, \theta) &amp;
 \begin{cases}
 x = r * \cos(\theta) = \rho * \sin(\phi) * \cos(\theta) \\
 y = r * \sin(\theta) = \rho * \cos(\phi) * \sin(\theta) \\
@@ -143,19 +152,19 @@ z = \rho * \cos(\phi)
 $$
 </p>
 
-<p><img src="/img/cg/cylindrical.jpg" alt="cylindrical"></p>
+<p><img src="/img/cg/cylindrical.jpg" alt="cylindrical" /></p>
 
 <p>想要在室内给物体拍出好的照片，需要搭建一个，坐标系就是 3D 空间物体的摄影棚。有了坐标系，就可以接着把物体数据化填充到坐标系中。以上图片均使用 python + matplotlib 生成，<a href="https://github.com/plinx/CodePractices/blob/master/Python/matcg.py">代码在此</a>。</p>
 
 <p><strong>这一部分我并没有讲述特别多的 3D 数学计算，如果需要深入了解，请查阅相关资料。</strong></p>
 
-<hr>
+<hr />
 
 <p>如果你发现我文章中的问题或希望与我交流，可以给我发邮件：<a href="mailto:plinux@qq.com">plinux@qq.com</a>。</p>
 
 <p>如果你读后有些许收获，也可以到我的 Github <a href="https://github.com/plinx">点赞支持</a>。</p>
 
-<p>&copy; 2015 plinx</p>
+<p>© 2015 plinx</p>
 
 </div>
 

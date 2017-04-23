@@ -27,199 +27,184 @@
 <p class="meta">10 Mar 2014</p>
 
 <div class="post">
-<p>本文主要讲述如何制作 <code>Github Pages Blog</code>。</p>
+<p>本文主要讲述如何制作 <code class="highlighter-rouge">Github Pages Blog</code>。</p>
 
 <p>过程主要有三大部分：</p>
 
 <ul>
-<li>创建Github Pages</li>
-<li>套用Jekyll/Jekyll-bootstrap</li>
-<li>使用域名</li>
+  <li>创建Github Pages</li>
+  <li>套用Jekyll/Jekyll-bootstrap</li>
+  <li>使用域名</li>
 </ul>
 
-<h2>1、创建Github Pages</h2>
+<p>##1、创建Github Pages</p>
 
 <p>Q:<a href="http://pages.github.com/">Github Pages</a> 是什么？</p>
 
 <p>A:Github Pages 是 github 推出的一款页面托管服务，可以作为项目介绍，也可以用于制作 blog。</p>
 
-<p>git 可谓是程序员项目管理必不可少的工具之一，如果你还没用过git，那可能需要<a href="%E6%81%B6%E8%A1%A5%E4%B8%80%E4%B8%8B" title="http://baike.baidu.com/subview/1531489/12032478.htm?fr=aladdin">恶补一下</a>了。</p>
+<p>git 可谓是程序员项目管理必不可少的工具之一，如果你还没用过git，那可能需要<a href="恶补一下" title="http://baike.baidu.com/subview/1531489/12032478.htm?fr=aladdin">恶补一下</a>了。</p>
 
 <p>关于 git 与 github 的用法不再多提， 要进入下一步， 首先你需要一个<a href="https://github.com/">github账号</a>。</p>
 
 <p>以下步骤仅讨论 Win7 环境，你也可以参考<a href="http://pages.github.com/">官方文档</a>。</p>
 
-<p>下载一个 <a href="http://msysgit.github.io/">git for windows</a>，之后以 <code>$开头</code> 的都是 <code>Git Bash</code> 下的命令行操作。</p>
+<p>下载一个 <a href="http://msysgit.github.io/">git for windows</a>，之后以 <code class="highlighter-rouge">$开头</code> 的都是 <code class="highlighter-rouge">Git Bash</code> 下的命令行操作。</p>
 
 <p>在 github 上创建一个新的 repository :</p>
 
-<p><img src="/img/gh-pages%20guide/create%20repo.jpg" alt="create repo"></p>
+<p><img src="/img/gh-pages guide/create repo.jpg" alt="create repo" /></p>
 
-<p>repository 需命名为 <code>username</code>.github.io。(username 需要更改为你自己的 github 用户名)</p>
+<p>repository 需命名为 <code class="highlighter-rouge">username</code>.github.io。(username 需要更改为你自己的 github 用户名)</p>
 
 <p>接着在本地操作 Git Bash :</p>
 
-<div class="highlight"><pre><code class="bash"><span class="nv">$ </span>ssh-keygen -t rsa -C <span class="s2">&quot;email_name@your_email.com&quot;</span>
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>ssh-keygen -t rsa -C <span class="s2">"email_name@your_email.com"</span></code></pre></figure>
 
 <p>有提示全部回车就可以了，接着会生成 SSH key.</p>
 
-<div class="highlight"><pre><code class="bash"><span class="nv">$ </span><span class="nb">cd</span> ~/.ssh
-<span class="nv">$ </span>ls
-id_rsa  id_rsa.pub ...
-<span class="nv">$ </span><span class="nb">pwd</span>
-/c/Users/name/.ssh
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span><span class="nb">cd</span> ~/.ssh
+<span class="gp">$ </span>ls
+id_rsa	id_rsa.pub ...
+<span class="gp">$ </span><span class="nb">pwd</span>
+/c/Users/name/.ssh</code></pre></figure>
 
-<p><code>id_rsa.pub</code> 就是我们需要的文件了，而 /c/Users/name/.ssh/ 就是 id_rsa.pub 的存放目录。</p>
+<p><code class="highlighter-rouge">id_rsa.pub</code> 就是我们需要的文件了，而 /c/Users/name/.ssh/ 就是 id_rsa.pub 的存放目录。</p>
 
 <p>打开id_rsa.pub（可以用记事本，或者其他文本编辑器），将内容复制。</p>
 
 <p>登陆github，进入 Acount Setting， Add SSH Key，复制内容即为 Key。</p>
 
-<p><img src="/img/gh-pages%20guide/acount%20setting.jpg" alt="login">
-<img src="/img/gh-pages%20guide/ssh%20keys.jpg" alt="sshk"></p>
+<p><img src="/img/gh-pages guide/acount setting.jpg" alt="login" />
+<img src="/img/gh-pages guide/ssh keys.jpg" alt="sshk" /></p>
 
-<p><img src="/img/gh-pages%20guide/ssh%20keys%20add.jpg" alt="pssh"></p>
+<p><img src="/img/gh-pages guide/ssh keys add.jpg" alt="pssh" /></p>
 
 <p>测试一下本地 git 与 github 是否成功连同 :</p>
 
-<div class="highlight"><pre><code class="bash"><span class="nv">$ </span>ssh -T git@github.com
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>ssh -T git@github.com</code></pre></figure>
 
 <p>配置本地 git ：</p>
 
-<div class="highlight"><pre><code class="bash"><span class="nv">$ </span>git config --global user.name <span class="s2">&quot;your_name&quot;</span>
-<span class="nv">$ </span>git config --global user.email <span class="s2">&quot;email_name@your_email.com&quot;</span> 
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>git config --global user.name <span class="s2">"your_name"</span>
+<span class="gp">$ </span>git config --global user.email <span class="s2">"email_name@your_email.com"</span> </code></pre></figure>
 
 <p>接着就可以开始创建你的主页了 :</p>
 
-<div class="highlight"><pre><code class="bash"><span class="nv">$ </span>git clone https://github.com/username/username.github.io
-<span class="nv">$ </span><span class="nb">cd </span>username.github.io
-<span class="nv">$ </span>git remote add orgin master
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>git clone https://github.com/username/username.github.io
+<span class="gp">$ </span><span class="nb">cd </span>username.github.io
+<span class="gp">$ </span>git remote add orgin master
 
-<span class="nv">$ </span><span class="nb">echo</span> <span class="s2">&quot;hello github pages&quot;</span> &gt; index.html
-<span class="nv">$ </span>git add -am <span class="s2">&quot;hello pages&quot;</span>
-<span class="nv">$ </span>git push origin master
-</code></pre></div>
+<span class="gp">$ </span><span class="nb">echo</span> <span class="s2">"hello github pages"</span> &gt; index.html
+<span class="gp">$ </span>git add -am <span class="s2">"hello pages"</span>
+<span class="gp">$ </span>git push origin master</code></pre></figure>
 
-<p>首次创建，同步需要10分钟，过了10分钟之后，登陆 <code>username</code>.github.io 就可以看到你的主页了。</p>
+<p>首次创建，同步需要10分钟，过了10分钟之后，登陆 <code class="highlighter-rouge">username</code>.github.io 就可以看到你的主页了。</p>
 
-<h2>2、套用Jekyll/Jekyll-bootstrap</h2>
+<p>##2、套用Jekyll/Jekyll-bootstrap</p>
 
 <p>Q:为什么是 Jekyll？
 A:Jekyll 是 github 官方支持的，而且 Jekyll 本身还支持 markdown，用起来非常方便，你也可以看到我完成状态下的写作环境(Git Bash + Markdown + Browser)如下图。</p>
 
-<p><img src="/img/gh-pages%20guide/wimg.jpg" alt="wimg"></p>
+<p><img src="/img/gh-pages guide/wimg.jpg" alt="wimg" /></p>
 
 <p>详细的步骤你也可以参考 Jekyll <a href="http://jekyllrb.com/docs/quickstart/">官方文档</a> 与 Jekyll-bootstrap <a href="http://jekyllbootstrap.com/usage/jekyll-quick-start.html">官方文档</a>。</p>
 
 <p>官方文档是直接从 Jekyll 应用开始的，在此之前我们还需要安装两样东西 ：</p>
 
 <ul>
-<li><a href="https://www.ruby-lang.org/en/downloads/">Ruby</a></li>
-<li><a href="http://rubygems.org/pages/download">Ruby Gems</a></li>
+  <li><a href="https://www.ruby-lang.org/en/downloads/">Ruby</a></li>
+  <li><a href="http://rubygems.org/pages/download">Ruby Gems</a></li>
 </ul>
 
 <p>Tips:</p>
 
-<div class="highlight"><pre><code class="bash">安装 Ruby 的时候需要勾选 Add ... PATH 与 Associate .rb ...
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">安装 Ruby 的时候需要勾选 Add ... PATH 与 Associate .rb ...</code></pre></figure>
 
 <p>安装完所需要的东西之后，你可以试一试官方的 <a href="http://jekyllrb.com/docs/quickstart/">Quick Start</a> :</p>
 
-<div class="highlight"><pre><code class="bash"><span class="nv">$ </span>gem install jekyll
-<span class="nv">$ </span>jekyll new testblog
-<span class="nv">$ </span><span class="nb">cd </span>testblog
-<span class="nv">$ </span>jekyll serve
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>gem install jekyll
+<span class="gp">$ </span>jekyll new testblog
+<span class="gp">$ </span><span class="nb">cd </span>testblog
+<span class="gp">$ </span>jekyll serve</code></pre></figure>
 
 <p>接着我们可以在浏览器中查看 http://localhost:4000 页面了。</p>
 
 <p>尝试过之后我们 clone 一份官方模板。</p>
 
-<div class="highlight"><pre><code class="bash"><span class="nv">$ </span>git clone https://github.com/plusjade/jekyll-bootstrap.git
-<span class="nv">$ </span><span class="nb">cd </span>jekyll-bootstrap
-<span class="nv">$ </span>jekyll serve
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>git clone https://github.com/plusjade/jekyll-bootstrap.git
+<span class="gp">$ </span><span class="nb">cd </span>jekyll-bootstrap
+<span class="gp">$ </span>jekyll serve</code></pre></figure>
 
 <p>可以看到官方模板的页面了。</p>
 
 <p>如果你需要查看更多的官方主题，可以根据<a href="http://jekyllbootstrap.com/usage/jekyll-theming.html">官方说明</a>来使用。</p>
 
-<p>我用的模板是官方主题 <code>mark-reid</code>，不过自己对主题的一些元素(背景，文字)进行了定制，这只需要一点点 css 的基础。</p>
+<p>我用的模板是官方主题 <code class="highlighter-rouge">mark-reid</code>，不过自己对主题的一些元素(背景，文字)进行了定制，这只需要一点点 css 的基础。</p>
 
 <p>在定制主题的过程中，主要需要修改以下几个文件：</p>
 
-<div class="highlight"><pre><code class="bash">_include/themes/mark-reid/default.html
-assert/themes/mark-reid/css/screen.css
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">_include/themes/mark-reid/default.html
+assert/themes/mark-reid/css/screen.css</code></pre></figure>
 
 <p>还需要修改主页的可以更改 index.md 文件。</p>
 
 <ul>
-<li>当我们需要写博客的时候，只需要在 _post 目录下，加入命名为 Year-Mon-Day-Title.md 的 markdown 文档就行了就行了。</li>
+  <li>当我们需要写博客的时候，只需要在 _post 目录下，加入命名为 Year-Mon-Day-Title.md 的 markdown 文档就行了就行了。</li>
 </ul>
 
 <p>例如我在写的这篇 ：</p>
 
-<div class="highlight"><pre><code class="sh">2014-3-9-gh-pages-guide.md
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-sh" data-lang="sh">2014-3-9-gh-pages-guide.md</code></pre></figure>
 
 <p>Jekyll-bootstrap 还有很多用法，如果想要做一个优秀的个人博客，需要更加深入的学习，限于时间，我只能将最简单的用法讲清楚。</p>
 
 <p>Jekyll 的一个使用技巧 ：</p>
 
-<div class="highlight"><pre><code class="sh"><span class="nv">$ </span>jekyll serve --watch &amp;
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="gp">$ </span>jekyll serve --watch &amp;</code></pre></figure>
 
-<p>加上 <code>--watch</code> 可以使 localhost:4000 页面刷新即变化，不需要重新执行 serve。</p>
+<p>加上 <code class="highlighter-rouge">--watch</code> 可以使 localhost:4000 页面刷新即变化，不需要重新执行 serve。</p>
 
 <p>在整个安装过程中，不同电脑肯能还会遇上不同的坑，这些自行搜索解决。</p>
 
 <p>在这里，我提三个大家可能遇到的 ：</p>
 
 <ul>
-<li>中文页面无法显示</li>
+  <li>中文页面无法显示</li>
 </ul>
 
-<p>解决方法 ： 编辑 <code>_config.yml</code>，加入一句
-<code>
-enconding: utf-8
-</code></p>
+<p>解决方法 ： 编辑 <code class="highlighter-rouge">_config.yml</code>，加入一句</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>enconding: utf-8
+</code></pre>
+</div>
 
 <p>参考 <a href="http://jekyllrb.com/docs/configuration/">_config.yml configuration</a></p>
 
 <ul>
-<li>&#39;cannot load such file -- wdm (LoadError)&#39;</li>
+  <li>‘cannot load such file – wdm (LoadError)’</li>
 </ul>
 
 <p>解决方法 ： gem 安装</p>
 
-<div class="highlight"><pre><code class="bash"><span class="nv">$ </span>gem install wdm
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>gem install wdm</code></pre></figure>
 
 <ul>
-<li>git push 时，返回邮件 The submodule <code>_theme_packages/mark-reid</code> was not properly initialized with a <code>.gitmodules</code> file.</li>
+  <li>git push 时，返回邮件 The submodule <code class="highlighter-rouge">_theme_packages/mark-reid</code> was not properly initialized with a <code class="highlighter-rouge">.gitmodules</code> file.</li>
 </ul>
 
-<p>原因 ： 我们使用的是 bootstrap 的模板，在使用过程中，我们还通过 rake 来安装了主题，这些主题都是属于不同的 github 树的，我们可以在主题目录中使用 <code>$ ls -a</code>来查看，会发现存在 <code>.git</code> 目录。
+<p>原因 ： 我们使用的是 bootstrap 的模板，在使用过程中，我们还通过 rake 来安装了主题，这些主题都是属于不同的 github 树的，我们可以在主题目录中使用 <code class="highlighter-rouge">$ ls -a</code>来查看，会发现存在 <code class="highlighter-rouge">.git</code> 目录。
 解决方法 ： 清除子模块 或 将子模块加入主 git module</p>
 
-<div class="highlight"><pre><code class="bash"><span class="nv">$ </span>rm -rf _theme_packages/mark-reid/.git
-Question : 这样是否涉及协议问题，我在文档中的 README 未看到相关信息。
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>rm -rf _theme_packages/mark-reid/.git
+Question : 这样是否涉及协议问题，我在文档中的 README 未看到相关信息。</code></pre></figure>
 
 <p>或者</p>
 
-<div class="highlight"><pre><code class="bash"><span class="nv">$ </span><span class="nb">cd </span>_theme_packages/mark-reid/
-<span class="nv">$ </span>git submodule init
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span><span class="nb">cd </span>_theme_packages/mark-reid/
+<span class="gp">$ </span>git submodule init</code></pre></figure>
 
-<h2>3、使用域名</h2>
-
-<p><strong>这一步并不是必要的，我们的页面已经挂在 username.github.io 上面了，完全可以把这个就当做你的 Blog 页。</strong></p>
+<p>##3、使用域名
+<strong>这一步并不是必要的，我们的页面已经挂在 username.github.io 上面了，完全可以把这个就当做你的 Blog 页。</strong></p>
 
 <p>当然，如果你想要个性化，花几十块置办个域名也不会太贵。</p>
 
@@ -234,7 +219,7 @@ Question : 这样是否涉及协议问题，我在文档中的 README 未看到�
 <p>有两种解析方法：</p>
 
 <ul>
-<li>A记录解析</li>
+  <li>A记录解析</li>
 </ul>
 
 <p>使用A记录解析，我们需要指向 IP，指向的 IP 为 Github 的服务 IP。</p>
@@ -243,25 +228,23 @@ Question : 这样是否涉及协议问题，我在文档中的 README 未看到�
 
 <p>A记录解析，就是我们申请域名的一级域名解析，即 example.com。</p>
 
-<p>所以我们需要在 username.github.io 根目录下加入一个文件 <code>CNAME</code>，加入一句 :</p>
+<p>所以我们需要在 username.github.io 根目录下加入一个文件 <code class="highlighter-rouge">CNAME</code>，加入一句 :</p>
 
-<div class="highlight"><pre><code class="html">example.com
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-html" data-lang="html">example.com</code></pre></figure>
 
 <ul>
-<li>CNAME解析</li>
+  <li>CNAME解析</li>
 </ul>
 
 <p>使用CNAME解析，我们需要指向一个域名，这个域名就是我们的 username.github.io。</p>
 
-<p>所以我们根目录下的 <code>CNAME</code> 应该加入的是 :</p>
+<p>所以我们根目录下的 <code class="highlighter-rouge">CNAME</code> 应该加入的是 :</p>
 
-<div class="highlight"><pre><code class="html">www.example.com
-</code></pre></div>
+<figure class="highlight"><pre><code class="language-html" data-lang="html">www.example.com</code></pre></figure>
 
 <p>我采用的是CNAME解析，最终如下图 :</p>
 
-<p><img src="/img/gh-pages%20guide/cname.jpg" alt="cname"></p>
+<p><img src="/img/gh-pages guide/cname.jpg" alt="cname" /></p>
 
 <p>接着就可以等待我们的域名生效了。</p>
 
@@ -269,7 +252,7 @@ Question : 这样是否涉及协议问题，我在文档中的 README 未看到�
 
 <p>1、<a href="http://beiyuu.com/github-pages/">使用Github Pages建独立博客</a></p>
 
-<p>2、<a href="http://zipperary.com/categories/hexo/">zipperary&#39;s blog</a></p>
+<p>2、<a href="http://zipperary.com/categories/hexo/">zipperary’s blog</a></p>
 
 <p>3、<a href="http://www.ruanyifeng.com/blog/2012/08/blogging_with_jekyll.html">阮一峰的网络日记</a></p>
 
@@ -277,7 +260,7 @@ Question : 这样是否涉及协议问题，我在文档中的 README 未看到�
 
 <p>原文地址 ： <a href="/2014/03/10/gh-pages-guide">www.cplinx.com/2014/03/10/gh-pages-guide</a></p>
 
-<p>&copy; 2014 plinx</p>
+<p>© 2014 plinx</p>
 
 </div>
 
